@@ -2,8 +2,8 @@ package param
 
 type Pagination struct {
 	PageIndex int    `form:"page_index"`
-	PageSize  int    `from:"page_size"`
-	Desc      bool   `form:"desc"`
+	PageSize  int    `form:"page_size"`
+	Sort      bool   `form:"sort"`
 	Order     string `form:"order"`
 }
 
@@ -28,7 +28,7 @@ func (p *Pagination) OrderBy() string {
 	if p.Order == "" {
 		orderBy = "id"
 	}
-	if p.Desc {
+	if p.Sort {
 		orderBy += " desc"
 	}
 	return orderBy

@@ -18,6 +18,9 @@ func Get(c *service.AdminContext) (resp service.Res) {
 	m := model.Role{}
 	g := db.G.Model(&m)
 	r := response.RoleResponse{}
+	if resp.Err = db.FindByPagination(g, &p.Pagination, &r.Pagination); resp.Err != nil {
+		return
+	}
 	if resp.Err = g.Find(&r.List).Error; resp.Err != nil {
 		return
 	}

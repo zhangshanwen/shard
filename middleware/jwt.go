@@ -3,16 +3,18 @@ package middleware
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
+
 	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/internal/header"
 	"github.com/zhangshanwen/shard/tools"
-	"net/http"
-	"strconv"
-	"strings"
 )
 
 func verifyJwt(c *gin.Context) (res service.Res, claims *tools.Claims) {
