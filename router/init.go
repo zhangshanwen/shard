@@ -17,6 +17,6 @@ func InitRouter() {
 
 func run() {
 	app.InitRoute()
-	_ = app.R.Run(fmt.Sprintf(":%s", conf.C.Port))
+	_ = app.R.Run(fmt.Sprintf("%s:%s", conf.C.Host, conf.C.Port))
 
 }

@@ -1,6 +1,7 @@
 package conf
 
 type Conf struct {
+	Host          string        `yaml:"host"`
 	Port          string        `yaml:"port"`
 	DB            DB            `yaml:"db"`
 	Authorization Authorization `yaml:"authorization"`
