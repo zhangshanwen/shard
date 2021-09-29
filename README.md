@@ -1,6 +1,11 @@
-### 基于gin的web后端api服务
+### 基于gin后台权限管理系统
+***
+数据库: mysql + redis 
+创建mysql database ```create database shard charset=utf8mb4```
+导入sql/shard.sql数据 
+***
 
- 1. 生成公私钥
+1. 生成公私钥
 ```
 生成私钥
 openssl genrsa -out rsa/shard.rsa

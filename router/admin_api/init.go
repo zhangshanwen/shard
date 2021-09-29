@@ -15,4 +15,5 @@ func RegisterBackendV1Router() {
 	v1.InitUser(group)
 	v1.InitRoute(group)
 	v1.InitRole(group)
+	v1.InitOss(group)
 }

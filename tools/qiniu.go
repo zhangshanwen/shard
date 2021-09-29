@@ -19,7 +19,8 @@ func NewQiNiuImage(accessKey, secretKey, domain string) (q *QiNiuImage) {
 }
 func (q *QiNiuImage) NewToken(bucket string) string {
 	putPolicy := storage.PutPolicy{
-		Scope: bucket,
+		Scope:   bucket,
+		Expires: 7200,
 	}
 	return putPolicy.UploadToken(q.Mac)
 }

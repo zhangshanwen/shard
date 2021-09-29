@@ -24,10 +24,14 @@ type (
 	}
 	AdminRolePermissionResponse struct {
 		Authorization string                `json:"authorization,omitempty"`
-		Avatar        string                `json:"avatar"`
 		Username      string                `json:"username"`
 		List          []AdminRolePermission `json:"list"`
 		Keys          []string              `json:"keys"`
+		Avatar        Avatar                `json:"avatar"`
+	}
+	Avatar struct {
+		Url  string `json:"url"`
+		Name string `json:"name"`
 	}
 	AdminRolePermission struct {
 		Id       int64                 `json:"id"`

@@ -21,5 +21,12 @@ func InitUser(Router *gin.RouterGroup) {
 				reset.GET(common.UriId, jwt(user.ResetPassword)) // 重置密码
 			}
 		}
+		balance := r.Group(common.Balance)
+		{
+			adjust := balance.Group(common.Adjust)
+			{
+				adjust.PATCH(common.UriId, jwt(user.BalanceAdjust)) // 调整余额
+			}
+		}
 	}
 }

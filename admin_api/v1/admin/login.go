@@ -61,6 +61,9 @@ func Login(c *service.AdminContext) (resp service.Res) {
 	if resp.Err = rolePermission(g, c, &admin, &r); resp.Err != nil {
 		return
 	}
+	oss := tools.NewOss()
+	r.Avatar.Name = admin.Avatar
+	r.Avatar.Url = oss.GetUrl(admin.Avatar)
 	resp.Data = r
 	return
 }

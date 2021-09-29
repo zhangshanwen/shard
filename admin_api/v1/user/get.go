@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
@@ -17,7 +18,7 @@ func Get(c *service.AdminContext) (resp service.Res) {
 		resp.ResCode = code.ParamsError
 		return
 	}
-	g := db.G.Model(&model.User{})
+	g := db.G.Model(&model.User{}).Preload("Wallet")
 	if p.Username != "" {
 		g = g.Where(model.User{Username: fmt.Sprintf("%%%s%%", p.Username)})
 	}
@@ -25,7 +26,11 @@ func Get(c *service.AdminContext) (resp service.Res) {
 	if resp.Err = db.FindByPagination(g, &p.Pagination, &r.Pagination); resp.Err != nil {
 		return
 	}
-	if resp.Err = g.Find(&r.List).Error; resp.Err != nil {
+	var ms []model.User
+	if resp.Err = g.Find(&ms).Error; resp.Err != nil {
+		return
+	}
+	if resp.Err = copier.Copy(&r.List, &ms); resp.Err != nil {
 		return
 	}
 	resp.Data = r

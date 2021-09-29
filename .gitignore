@@ -1,3 +1,4 @@
 .idea
 log/
 bin
+env/env.yaml

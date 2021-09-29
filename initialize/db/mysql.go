@@ -51,6 +51,8 @@ func AutoMigrate() {
 	_ = G.AutoMigrate(
 		&model.User{},
 		&model.Wallet{},
+		&model.WalletRecord{},
+
 		&model.Admin{},
 		&model.Route{},
 		&model.Role{},

@@ -24,4 +24,7 @@ type (
 	UserUploadAvatar struct {
 		Avatar string `json:"avatar"  binding:"required"`
 	}
+	AdjustBalance struct {
+		Amount int64 `json:"amount"       binding:"required"`
+	}
 )

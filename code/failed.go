@@ -19,6 +19,8 @@ const (
 	NoPermission        = 201003 // 没有权限
 	UsernameIsExisted   = 202001 // 用户名已经存在
 	NameIsExisted       = 202002 // 名称已经存在
+	AmountLtZero        = 202003 // 数量小于0
+	BalanceLess         = 202004 // 余额不足
 	NotChange           = 202003 // 未改变
 	LoginFailed         = 203001 // 登录失败
 	ActPWdError         = 203002 // 账号/密码错误
