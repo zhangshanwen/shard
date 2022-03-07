@@ -1,7 +1,7 @@
 
 NOW = $(shell date  '+%Y-%m-%d %H:%M:%S')
 
-.PHONY: check dist build
+.PHONY: check dist build run all check
 
 all: build
 
@@ -24,7 +24,7 @@ test:
 
 
 fmt:
-	go fmt  ./....
+	go fmt  ./...
 
 todo:
 	grep -rnw "TODO" internal
