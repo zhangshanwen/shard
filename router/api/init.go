@@ -10,4 +10,5 @@ func RegisterApiV1Router() {
 	group := api.Group("v1")
 	v1.InitVersion(group)
 	v1.InitUser(group)
+	v1.InitUpload(group)
 }

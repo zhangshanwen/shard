@@ -26,7 +26,6 @@ CREATE TABLE `shard_admin` (
   `created_time` bigint(20) DEFAULT NULL,
   `updated_time` bigint(20) DEFAULT NULL,
   `is_deleted` tinyint(1) DEFAULT '0',
-  `user_name` longtext,
   `password` varchar(255) DEFAULT NULL,
   `avatar` varchar(255) DEFAULT NULL,
   `username` varchar(20) DEFAULT NULL,
@@ -40,8 +39,8 @@ CREATE TABLE `shard_admin` (
 -- Records of shard_admin
 -- ----------------------------
 BEGIN;
-INSERT INTO `shard_admin` VALUES (1, 1630981091, 1631603273, 0, 'admin', '$2a$10$rmY3VZuXJl2/Wz7okf.ttuS1fCqv4shS2JIz.afwQVkU420gWotxi', '', 'admin', 1631603273, 1);
-INSERT INTO `shard_admin` VALUES (2, 1631276335, 1631589859, 0, NULL, '$2a$10$g/BTPQIe/Fdy9QQN6nyO5OiYGvjZ6gBnU6yec844P2NdRk9KN2sG2', '', 'admin2', 1631589859, 2);
+INSERT INTO `shard_admin` VALUES (1, 1630981091, 1631603273, 0,  '$2a$10$rmY3VZuXJl2/Wz7okf.ttuS1fCqv4shS2JIz.afwQVkU420gWotxi', '', 'admin', 1631603273, 1);
+INSERT INTO `shard_admin` VALUES (2, 1631276335, 1631589859, 0,  '$2a$10$g/BTPQIe/Fdy9QQN6nyO5OiYGvjZ6gBnU6yec844P2NdRk9KN2sG2', '', 'admin2', 1631589859, 2);
 COMMIT;
 
 -- ----------------------------

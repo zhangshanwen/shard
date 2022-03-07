@@ -4,9 +4,13 @@ import (
 	"github.com/zhangshanwen/shard/initialize/service"
 )
 
-var version string
+var buildTime string
+var git string
 
 func Version(c *service.Context) (resp service.Res) {
-	resp.Data = version
+	resp.Data = map[string]string{
+		"build_time": buildTime,
+		"git":        git,
+	}
 	return
 }

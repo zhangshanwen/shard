@@ -1,5 +1,7 @@
+Project = shard
 
 NOW = $(shell date  '+%Y-%m-%d %H:%M:%S')
+GIT = $(shell git rev-parse HEAD)
 
 .PHONY: check dist build run all check
 
@@ -9,10 +11,10 @@ check: test all build clean fmt todo legacy
 
 
 build:
-	go build  -ldflags "-X  'github.com/zhangshanwen/shard/api/v1.version=$(NOW)' "  -o bin/shard  cmd/api.go
+	go build  -ldflags "-X  'github.com/zhangshanwen/$(Project)/api/v1.buildTime=$(NOW)'  -X 'github.com/zhangshanwen/$(Project)/api/v1.git=$(GIT)'"   -o bin/$(Project)  cmd/api.go
 
 run:build
-	./bin/shard
+	./bin/$(Project)
 
 
 clean:
