@@ -2,8 +2,8 @@ package service
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
-	l "github.com/zhangshanwen/shard/initialize/logger"
 	"github.com/zhangshanwen/shard/model"
 )
 
@@ -16,7 +16,7 @@ func (c *Context) Rebind(obj interface{}) (err error) {
 	if err = c.Bind(obj); err != nil {
 		return
 	}
-	l.Logger.WithField("mod", "params").Info(obj)
+	logrus.WithField("mod", "params").Info(obj)
 	return
 }
 
@@ -29,6 +29,6 @@ func (c *AdminContext) Rebind(obj interface{}) (err error) {
 	if err = c.Bind(obj); err != nil {
 		return
 	}
-	l.Logger.WithField("mod", "params").Info(obj)
+	logrus.WithField("mod", "params").Info(obj)
 	return
 }

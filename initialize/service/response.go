@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/code"
-	l "github.com/zhangshanwen/shard/initialize/logger"
 )
 
 type Res struct {
@@ -55,7 +55,7 @@ func Json(c *gin.Context, r Res) {
 	}
 	var msg string
 	if r.Err != nil {
-		l.Logger.Error(r.Err)
+		logrus.Error(r.Err)
 		msg = r.Err.Error()
 	}
 	c.JSON(r.StatusCode, res{

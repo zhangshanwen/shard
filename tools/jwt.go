@@ -7,8 +7,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
+	"github.com/sirupsen/logrus"
+
 	"github.com/zhangshanwen/shard/initialize/conf"
-	l "github.com/zhangshanwen/shard/initialize/logger"
 )
 
 var (
@@ -36,19 +37,19 @@ func load() {
 	path += string(os.PathSeparator)
 	privateBytes, err = ioutil.ReadFile(path + "shard.rsa")
 	if err != nil {
-		l.Logger.Panic(err)
+		logrus.Panic(err)
 	}
 	privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateBytes)
 	if err != nil {
-		l.Logger.Fatalf("[initKeys]: %s\n", err)
+		logrus.Fatalf("[initKeys]: %s\n", err)
 	}
 	publicBytes, err = ioutil.ReadFile(path + "shard.rsa.pub")
 	if err != nil {
-		l.Logger.Panic(err)
+		logrus.Panic(err)
 	}
 	publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicBytes)
 	if err != nil {
-		l.Logger.Fatalf("[initKeys]: %s\n", err)
+		logrus.Fatalf("[initKeys]: %s\n", err)
 	}
 
 }

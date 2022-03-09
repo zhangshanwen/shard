@@ -6,9 +6,8 @@ import (
 	"os"
 
 	"github.com/fsnotify/fsnotify"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
-
-	l "github.com/zhangshanwen/shard/initialize/logger"
 )
 
 var (
@@ -31,14 +30,14 @@ func InitConf(path ...string) {
 				config = ConfigFile
 			} else {
 				config = configEnv
-				l.Logger.Info("您正在使用GVA_CONFIG环境变量,config的路径为%v\n", config)
+				logrus.Info("您正在使用GVA_CONFIG环境变量,config的路径为%v\n", config)
 			}
 		} else {
-			l.Logger.Info("您正在使用命令行的-c参数传递的值,config的路径为%v\n", config)
+			logrus.Info("您正在使用命令行的-c参数传递的值,config的路径为%v\n", config)
 		}
 	} else {
 		config = path[0]
-		l.Logger.Info("您正在使用func Viper()传递的值,config的路径为%v\n", config)
+		logrus.Info("您正在使用func Viper()传递的值,config的路径为%v\n", config)
 	}
 
 	v := viper.New()
@@ -46,17 +45,17 @@ func InitConf(path ...string) {
 	v.SetConfigType("yaml")
 	err := v.ReadInConfig()
 	if err != nil {
-		l.Logger.Fatal("Fatal error config file: %s \n", err)
+		logrus.Fatal("Fatal error config file: %s \n", err)
 	}
 	v.WatchConfig()
 	v.OnConfigChange(func(e fsnotify.Event) {
 		fmt.Println("config file changed:", e.Name)
 		if err := v.Unmarshal(&C); err != nil {
-			l.Logger.Fatal(err)
+			logrus.Fatal(err)
 		}
 	})
 	if err := v.Unmarshal(&C); err != nil {
-		l.Logger.Fatal(err)
+		logrus.Fatal(err)
 	}
 	return
 }

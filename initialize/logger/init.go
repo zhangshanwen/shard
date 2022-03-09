@@ -9,25 +9,23 @@ import (
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var Logger *log.Logger
+var Writer io.Writer
 
 func InitGinLogger() {
-	gin.DefaultWriter = Logger.Out
-	Logger.Info("......GIN日志初始化成功......")
+	gin.DefaultWriter = Writer
+	log.Info("......GIN日志初始化成功......")
 }
 
 func InitLog() {
-	Logger = log.New()
-	Logger.SetFormatter(&log.TextFormatter{
+	log.SetFormatter(&log.TextFormatter{
 		ForceColors: true,
 	})
-	//
-	mw := io.MultiWriter(os.Stdout, &lumberjack.Logger{
+	Writer = io.MultiWriter(os.Stdout, &lumberjack.Logger{
 		Filename:   "log/shard.log",
 		MaxSize:    1024, // megabytes
 		MaxBackups: 10,
 		MaxAge:     7, // days
 	})
-	Logger.SetOutput(mw)
+	log.SetOutput(Writer)
 	InitGinLogger()
 }

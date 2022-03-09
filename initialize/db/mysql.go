@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -18,11 +19,11 @@ import (
 var G *gorm.DB
 
 func InitMysql() {
-	l.Logger.Info("--------init_mysql_client_end---------")
+	logrus.Info("--------init_mysql_client_end---------")
 	var err error
 	m := conf.C.DB.Mysql
 	newLogger := logger.New(
-		log.New(l.Logger.Out, "\r\n", log.LstdFlags), // io writer
+		log.New(l.Writer, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
 			SlowThreshold:             time.Second, // Slow SQL threshold
 			LogLevel:                  logger.Info, // Log level
@@ -42,12 +43,12 @@ func InitMysql() {
 	}); err != nil {
 		panic(err)
 	}
-	l.Logger.Info("--------init_mysql_client_end---------")
+	logrus.Info("--------init_mysql_client_end---------")
 	AutoMigrate()
 	return
 }
 func AutoMigrate() {
-	l.Logger.Info("--------mysql_auto_migrate_start---------")
+	logrus.Info("--------mysql_auto_migrate_start---------")
 	_ = G.AutoMigrate(
 		&model.User{},
 		&model.Wallet{},
@@ -61,5 +62,5 @@ func AutoMigrate() {
 		&model.File{},
 		&model.FileRecord{},
 	)
-	l.Logger.Info("--------mysql_auto_migrate_end---------")
+	logrus.Info("--------mysql_auto_migrate_end---------")
 }

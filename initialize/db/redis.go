@@ -3,16 +3,17 @@ package db
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-redis/redis/v8"
+	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/initialize/conf"
-	l "github.com/zhangshanwen/shard/initialize/logger"
 )
 
 var R *redis.Client
 
 func InitRedis() {
-	l.Logger.Info("--------init_redis_client_start---------")
+	logrus.Info("--------init_redis_client_start---------")
 	redisConf := conf.C.DB.Redis
 	host := redisConf.Host
 	port := redisConf.Port
@@ -28,7 +29,7 @@ func InitRedis() {
 		DB:       redisConf.DataBase,
 	})
 	if err := R.Ping(context.Background()).Err(); err != nil {
-		l.Logger.Panic(err)
+		logrus.Panic(err)
 	}
-	l.Logger.Info("--------init_redis_client_end---------")
+	logrus.Info("--------init_redis_client_end---------")
 }
