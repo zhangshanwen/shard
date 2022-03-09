@@ -57,6 +57,9 @@ func AutoMigrate() {
 		&model.Route{},
 		&model.Role{},
 		&model.Permission{},
+
+		&model.File{},
+		&model.FileRecord{},
 	)
 	l.Logger.Info("--------mysql_auto_migrate_end---------")
 }

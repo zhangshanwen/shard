@@ -1,7 +1,8 @@
 Project = shard
 
 NOW = $(shell date  '+%Y-%m-%d %H:%M:%S')
-GIT = $(shell git rev-parse HEAD)
+# GIT = $(shell git rev-parse HEAD)
+GIT = $(shell git --no-pager log --decorate=short --pretty=oneline -n1)
 
 .PHONY: check dist build run all check
 

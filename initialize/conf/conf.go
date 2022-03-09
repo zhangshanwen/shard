@@ -8,4 +8,5 @@ type Conf struct {
 	Authorization Authorization `yaml:"authorization"`
 	Level         string        `yaml:"level"`
 	ResetPassword string        `yaml:"resetPassword"`
+	File          File          `yaml:"file"`
 }
