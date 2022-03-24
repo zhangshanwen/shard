@@ -3,6 +3,7 @@ module github.com/zhangshanwen/shard
 go 1.16
 
 require (
+	github.com/bwmarrin/snowflake v0.3.0 // indirect
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gin-gonic/gin v1.7.2

@@ -7,26 +7,30 @@ import (
 	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/code"
+	"github.com/zhangshanwen/shard/initialize/node"
 )
 
 type Res struct {
 	StatusCode int
 	ResCode    int
+	ReqId      int64
 	Data       interface{}
 	Err        error
 }
 
 type res struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data"`
+	Code  int         `json:"code"`
+	ReqId int64       `json:"req_id"`
+	Msg   string      `json:"msg"`
+	Data  interface{} `json:"data"`
 }
 
 func success(c *gin.Context, r Res) {
 	c.JSON(http.StatusOK, res{
-		Code: code.Success,
-		Msg:  "ok",
-		Data: r.Data,
+		Code:  code.Success,
+		Msg:   "ok",
+		Data:  r.Data,
+		ReqId: r.ReqId,
 	})
 }
 
@@ -39,13 +43,15 @@ func failed(c *gin.Context, r Res) {
 		r.ResCode = code.BaseFailedCode
 	}
 	c.JSON(http.StatusBadRequest, res{
-		Code: r.ResCode,
-		Data: nil,
-		Msg:  msg,
+		Code:  r.ResCode,
+		Data:  nil,
+		Msg:   msg,
+		ReqId: r.ReqId,
 	})
 }
 
 func Json(c *gin.Context, r Res) {
+	r.ReqId = node.N.Generate()
 	if r.StatusCode == 0 {
 		if r.Err == nil {
 			success(c, r)
@@ -60,8 +66,9 @@ func Json(c *gin.Context, r Res) {
 		msg = r.Err.Error()
 	}
 	c.JSON(r.StatusCode, res{
-		Code: r.ResCode,
-		Data: r.Data,
-		Msg:  msg,
+		Code:  r.ResCode,
+		Data:  r.Data,
+		Msg:   msg,
+		ReqId: r.ReqId,
 	})
 }
