@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
@@ -13,11 +13,11 @@ var Writer io.Writer
 
 func InitGinLogger() {
 	gin.DefaultWriter = Writer
-	log.Info("......GIN日志初始化成功......")
+	logrus.Info("......GIN日志初始化成功......")
 }
 
 func InitLog() {
-	log.SetFormatter(&log.TextFormatter{
+	logrus.SetFormatter(&logrus.TextFormatter{
 		ForceColors: true,
 	})
 	Writer = io.MultiWriter(os.Stdout, &lumberjack.Logger{
@@ -26,6 +26,6 @@ func InitLog() {
 		MaxBackups: 10,
 		MaxAge:     7, // days
 	})
-	log.SetOutput(Writer)
+	logrus.SetOutput(Writer)
 	InitGinLogger()
 }

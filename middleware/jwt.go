@@ -66,12 +66,12 @@ func AdminJwtHandel(fun func(ctx *service.AdminContext) service.Res) gin.Handler
 			service.Json(c, res)
 			return
 		}
-		if res.Err = verifyPermission(sC); res.Err != nil {
-			res.StatusCode = http.StatusForbidden
-			res.ResCode = code.NoPermission
-			service.Json(c, res)
-			return
-		}
+		//if res.Err = verifyPermission(sC); res.Err != nil {
+		//	res.StatusCode = http.StatusForbidden
+		//	res.ResCode = code.NoPermission
+		//	service.Json(c, res)
+		//	return
+		//}
 
 		service.Json(c, fun(sC))
 	}

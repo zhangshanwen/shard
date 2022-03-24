@@ -18,7 +18,6 @@ type (
 		Pagination
 	}
 	UserEdit struct {
-		Id       int64  `json:"id"        binding:"required"`
 		Username string `json:"username"  binding:"required"`
 	}
 	UserUploadAvatar struct {

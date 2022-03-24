@@ -2,6 +2,7 @@ package tools
 
 import (
 	"crypto/rsa"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -14,8 +15,8 @@ import (
 
 var (
 	defaultExpiresTimes = 12 * time.Hour
-	defaultTokenType    = "shard"
-	path                = "rsa"
+	defaultTokenType    = conf.Project
+	rasPath             = "rsa"
 	privateKey          *rsa.PrivateKey
 	publicKey           *rsa.PublicKey
 	method              = jwt.SigningMethodRS256 //默认256
@@ -34,8 +35,8 @@ type Claims struct {
 func load() {
 	var err error
 	var privateBytes, publicBytes []byte
-	path += string(os.PathSeparator)
-	privateBytes, err = ioutil.ReadFile(path + "shard.rsa")
+	rasPath += string(os.PathSeparator)
+	privateBytes, err = ioutil.ReadFile(rasPath + fmt.Sprintf("%s.rsa", conf.Project))
 	if err != nil {
 		logrus.Panic(err)
 	}
@@ -43,7 +44,7 @@ func load() {
 	if err != nil {
 		logrus.Fatalf("[initKeys]: %s\n", err)
 	}
-	publicBytes, err = ioutil.ReadFile(path + "shard.rsa.pub")
+	publicBytes, err = ioutil.ReadFile(rasPath + fmt.Sprintf("%s.rsa.pub", conf.Project))
 	if err != nil {
 		logrus.Panic(err)
 	}

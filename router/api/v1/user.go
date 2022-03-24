@@ -2,13 +2,14 @@ package v1
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/zhangshanwen/shard/common"
 
 	"github.com/zhangshanwen/shard/api/v1/user"
 	"github.com/zhangshanwen/shard/middleware"
 )
 
 func InitUser(Router *gin.RouterGroup) {
-	r := Router.Group("user")
+	r := Router.Group(common.User)
 	v := middleware.Handel
 	jwt := middleware.JwtHandel
 	{

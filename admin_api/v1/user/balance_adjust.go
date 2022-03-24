@@ -42,7 +42,7 @@ func BalanceAdjust(c *service.AdminContext) (resp service.Res) {
 	} else {
 		recordType = model.WalletRecordTypeBackendIncrease
 	}
-	record := model.WalletRecord{Amount: p.Amount, Type: recordType}
+	record := model.WalletRecord{Amount: p.Amount, RecordType: recordType}
 	if user.Wallet == nil {
 		if p.Amount < 0 {
 			resp.ResCode = code.AmountLtZero

@@ -10,10 +10,14 @@ func RegisterBackendV1Router() {
 	api := app.R.Group(common.BackendPrefix)
 	group := api.Group(common.V1)
 
+	v1.InitVersion(group)
 	v1.InitAdmin(group)
 	v1.InitPermission(group)
 	v1.InitUser(group)
 	v1.InitRoute(group)
 	v1.InitRole(group)
 	v1.InitOss(group)
+	v1.InitFile(group)
+	v1.InitTask(group)
+
 }

@@ -25,6 +25,7 @@ type res struct {
 func success(c *gin.Context, r Res) {
 	c.JSON(http.StatusOK, res{
 		Code: code.Success,
+		Msg:  "ok",
 		Data: r.Data,
 	})
 }

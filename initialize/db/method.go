@@ -7,8 +7,8 @@ import (
 )
 
 func FindByPagination(tx *gorm.DB, p *param.Pagination, r *response.Pagination) (err error) {
-	r.PageIndex = p.PageIndex
-	r.PageSize = p.PageSize
+	r.PageIndex = p.GetPageIndex()
+	r.PageSize = p.GetPageSize()
 	if err = tx.Count(&r.Total).Error; err != nil {
 		return
 	}
@@ -18,8 +18,8 @@ func FindByPagination(tx *gorm.DB, p *param.Pagination, r *response.Pagination) 
 
 func Paginate(p *param.Pagination, r *response.Pagination) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		r.PageIndex = p.PageIndex
-		r.PageSize = p.PageSize
+		r.PageIndex = p.GetPageIndex()
+		r.PageSize = p.GetPageSize()
 		return db.Offset(p.Offset()).Limit(p.GetPageSize()).Order(p.OrderBy())
 	}
 }

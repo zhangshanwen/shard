@@ -43,6 +43,11 @@ const (
 	Oss         = "oss"
 	Token       = "token"
 	Users       = "users"
+	User        = "user"
 	Roles       = "roles"
 	Check       = "check"
+	File        = "file"
+	Task        = "task"
+	Stop        = "stop"
+	Run         = "run"
 )
