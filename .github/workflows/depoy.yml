@@ -12,6 +12,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    if: "! startsWith(github.event.head_commit.message, 'doc')"
     steps:
       # 切换分支
       - name: Checkout
