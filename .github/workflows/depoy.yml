@@ -1,0 +1,43 @@
+name: Deploy go files
+
+on:
+  push:
+    branches:
+      - main # 只在master上push触发部署
+    paths-ignore: # 下列文件的变更不触发部署，可以自行添加
+      - README.md
+      - LICENSE
+      - .gitignore
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 切换分支
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: make go
+        uses: actions/setup-go@v2
+        with:
+          stable: 'false'
+          go-version: '1.17.0-rc2'
+      - run: make
+      - name: Deploy
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          port: 22
+          key: ${{ secrets.DEPLOY_KEY }}
+          source: "bin/"
+          target: "/root/servers/shard/"
+      - name: Restart server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.DEPLOY_KEY }}
+          script: |
+            cd /root/servers/shard
+            ./run.sh
+
