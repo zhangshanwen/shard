@@ -14,12 +14,16 @@ func SaveFile(fileName, fileBody, filePath string) (err error) {
 	if filePath == "" {
 		filePath = conf.C.File.Path
 	}
-	s, err := os.Stat(filePath)
+	var s os.FileInfo
+	s, err = os.Stat(filePath)
 	if err != nil {
-		return os.MkdirAll(filePath, os.ModePerm)
-	}
-	if !s.IsDir() {
-		return errors.New("path is a file")
+		if err = os.MkdirAll(filePath, os.ModePerm); err != nil {
+			return
+		}
+	} else {
+		if !s.IsDir() {
+			return errors.New("path is a file")
+		}
 	}
 
 	var decodeData []byte
