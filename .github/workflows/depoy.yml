@@ -39,5 +39,6 @@ jobs:
           key: ${{ secrets.DEPLOY_KEY }}
           script: |
             cd /root/servers/shard
-            ./run.sh
+            pkill shard 
+            bin/shard > /dev/null 2>&1 &
 
