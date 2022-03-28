@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/common"
@@ -66,12 +67,12 @@ func AdminJwtHandel(fun func(ctx *service.AdminContext) service.Res) gin.Handler
 			service.Json(c, res)
 			return
 		}
-		//if res.Err = verifyPermission(sC); res.Err != nil {
-		//	res.StatusCode = http.StatusForbidden
-		//	res.ResCode = code.NoPermission
-		//	service.Json(c, res)
-		//	return
-		//}
+		if res.Err = verifyPermission(sC); res.Err != nil {
+			res.StatusCode = http.StatusForbidden
+			res.ResCode = code.NoPermission
+			service.Json(c, res)
+			return
+		}
 
 		service.Json(c, fun(sC))
 	}
@@ -91,7 +92,8 @@ func verifyPermission(c *service.AdminContext) (err error) {
 	var val bool
 	val, err = db.R.HGet(c, key, field).Bool()
 	if err != nil {
-		return err
+		logrus.Error(err)
+		return errors.New("No_Permission")
 	}
 	if !val {
 		return errors.New("No_Permission")
