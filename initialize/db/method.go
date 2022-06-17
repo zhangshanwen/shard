@@ -1,8 +1,8 @@
 package db
 
 import (
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"gorm.io/gorm"
 )
 

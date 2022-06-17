@@ -1,48 +1,60 @@
 package admin
 
 import (
-	"errors"
-
+	"fmt"
 	"github.com/jinzhu/copier"
 
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Create(c *service.AdminContext) (resp service.Res) {
+func Create(c *service.AdminContext) (r service.Res) {
 	p := param.Register{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.Admin{Username: p.Username}
-	g := db.G
+	var (
+		m    = model.Admin{Username: p.Username}
+		tx   = db.G.Begin()
+		resp response.AdminInfo
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
 	var count int64
-	if resp.Err = g.Model(&m).Where(&m).Count(&count).Error; resp.Err != nil {
+	if r.Err = tx.Model(&m).Where("id=?", m.Id).Count(&count).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
 	if count > 0 {
-		resp.Err = errors.New("username is existed")
-		resp.ResCode = code.UsernameIsExisted
+		r.UsernameIsExisted()
 		return
 	}
-	if resp.Err = copier.Copy(&m, &p); resp.Err != nil {
+	if r.Err = copier.Copy(&m, &p); r.Err != nil {
+		r.CopierError()
 		return
 	}
-	if resp.Err = m.SetPassword(p.Password); resp.Err != nil {
+	if r.Err = m.SetPassword(p.Password); r.Err != nil {
+		r.SetPasswordError()
 		return
 	}
-	if resp.Err = g.Create(&m).Error; resp.Err != nil {
+	if r.Err = tx.Create(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	r := response.AdminInfo{}
-	if resp.Err = copier.Copy(&r, &m); resp.Err != nil {
+	if r.Err = copier.Copy(&resp, &m); r.Err != nil {
+		r.CopierError()
 		return
 	}
-	resp.Data = m
+	c.SaveLog(tx, fmt.Sprintf("创建管理员 %v", m.Username), model.OperateLogTypeAdd)
 	return
 }

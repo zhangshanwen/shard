@@ -1,8 +1,13 @@
 package common
 
 const (
+
 	// headers
 	Authorization = "Authorization" // 认证header token
+
+	//schema
+	HttpPrefix  = "http://"
+	HttpsPrefix = "https://"
 
 	// db signal
 	PermissionFindChildren       = "Shard_PermissionFindChildren"
@@ -14,6 +19,8 @@ const (
 
 	// redis key
 	RedisRoutesKey = "shard_routes_%v"
+	AdminLoginKey  = "shard_admin_login_%v"
+	UserLoginKey   = "shard_user_login_%v"
 
 	// backlash
 	Backlash = "/"
@@ -26,7 +33,10 @@ const (
 	V1 = "v1"
 
 	// params
-	UriId = ":id"
+	UriId            = ":id"
+	UriAuthorization = ":authorization"
+
+	Socket = "socket"
 
 	// router
 	UriEmpty    = ""
@@ -47,7 +57,10 @@ const (
 	Roles       = "roles"
 	Check       = "check"
 	File        = "file"
+	Host        = "host"
+	Log         = "log"
 	Task        = "task"
 	Stop        = "stop"
 	Run         = "run"
+	Room        = "room"
 )

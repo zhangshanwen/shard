@@ -1,35 +1,38 @@
 package task
 
 import (
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/initialize/task"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Stop(c *service.AdminContext) (resp service.Res) {
+func Stop(c *service.AdminContext) (r service.Res) {
 	p := param.UriId{}
-	if resp.Err = c.BindUri(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	g := db.G.Begin().Model(model.Task{})
+	var (
+		m  = model.Task{}
+		tx = db.G.Begin()
+	)
 	defer func() {
-		if resp.Err != nil {
-			g.Rollback()
-			return
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
 		}
-		g.Commit()
 	}()
-	t := model.Task{}
-	if resp.Err = g.First(&t, p.Id).Error; resp.Err != nil {
+	if r.Err = tx.First(&m, p.Id).Error; r.Err != nil {
+		r.NotFound()
 		return
 	}
-	if resp.Err = g.Where("id=?", p.Id).Update("status", model.StatusStop).Error; resp.Err != nil {
+	if r.Err = tx.Model(&m).Where("id=?", p.Id).Update("status", model.StatusStop).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Err = task.T.Stop(p.Id)
+	task.T.StopAll(p.Id)
 	return
 }

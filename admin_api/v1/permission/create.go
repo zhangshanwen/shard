@@ -1,32 +1,37 @@
 package permission
 
 import (
+	"fmt"
+
 	"github.com/jinzhu/copier"
 
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Create(c *service.AdminContext) (resp service.Res) {
+func Create(c *service.AdminContext) (r service.Res) {
 	p := param.Permission{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.Permission{Name: p.Name}
-	g := db.G
-	g = g.Begin()
+	var (
+		m  = model.Permission{Name: p.Name}
+		tx = db.G.Begin()
+	)
+
 	defer func() {
-		if resp.Err == nil {
-			g.Commit()
+		r.Data = m
+		if r.Err == nil {
+			tx.Commit()
 		} else {
-			g.Rollback()
+			tx.Rollback()
 		}
 	}()
-	if resp.Err = copier.Copy(&m, &p); resp.Err != nil {
+	if r.Err = copier.Copy(&m, &p); r.Err != nil {
+		r.CopierError()
 		return
 	}
 	for _, i := range p.RouteIds {
@@ -34,10 +39,10 @@ func Create(c *service.AdminContext) (resp service.Res) {
 			BaseModel: model.BaseModel{Id: i},
 		})
 	}
-	if resp.Err = g.Create(&m).Error; resp.Err != nil {
+	if r.Err = tx.Create(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-
-	resp.Data = m
+	c.SaveLog(tx, fmt.Sprintf("创建权限 id:%v name:%v", m.Id, m.Name), model.OperateLogTypeAdd)
 	return
 }

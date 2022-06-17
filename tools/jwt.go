@@ -52,18 +52,23 @@ func load() {
 	if err != nil {
 		logrus.Fatalf("[initKeys]: %s\n", err)
 	}
-
 }
-func CreateToken(uid int64) (token string, err error) {
-	var expiresAt int64 //过期时间
+
+func GetExpireTime() (ExpireHour time.Duration) {
 	if conf.C.Authorization.ExpireHour == 0 {
-		expiresAt = time.Now().Add(defaultExpiresTimes).Unix()
+		return defaultExpiresTimes
 	} else {
-		expiresAt = time.Now().Add(time.Duration(conf.C.Authorization.ExpireHour) * time.Hour).Unix()
+		return time.Duration(conf.C.Authorization.ExpireHour) * time.Hour
 	}
+}
+func GetExpiresAt() (expiresAt int64) {
+	return time.Now().Add(GetExpireTime()).Unix()
+}
+
+func CreateToken(uid int64) (token string, err error) {
 	t := jwt.NewWithClaims(method, Claims{
 		&jwt.StandardClaims{
-			ExpiresAt: expiresAt,
+			ExpiresAt: GetExpiresAt(),
 		},
 		Payload{uid, defaultTokenType},
 	})

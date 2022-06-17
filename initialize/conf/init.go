@@ -14,7 +14,7 @@ var (
 )
 
 const (
-	ConfigFile = "./env/env.yaml"
+	ConfigFile = "./env/shard.yaml"
 )
 
 func InitConf() {

@@ -6,3 +6,8 @@ type BaseModel struct {
 	UpdatedTime int64 `json:"updated_time"   gorm:"autoUpdateTime"`
 	IsDeleted   bool  `json:"-"              gorm:"default:0"`
 }
+
+const (
+	CommonStatusSuccess = 1
+	CommonStatusFailed  = 0
+)

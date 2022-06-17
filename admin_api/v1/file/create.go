@@ -6,11 +6,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/conf"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 )
@@ -20,10 +19,10 @@ import (
 2.检测文件是否上传过该文件名，如果没有创建该记录，如果有则覆盖该记录
 */
 
-func Upload(c *service.AdminContext) (resp service.Res) {
+func Upload(c *service.AdminContext) (r service.Res) {
 	p := param.FileUploadParams{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
 	var postFix string
@@ -32,29 +31,35 @@ func Upload(c *service.AdminContext) (resp service.Res) {
 		postFix = ".py"
 	}
 
-	var file model.File
+	var (
+		file       model.File
+		tx         = db.G.Begin()
+		fileRecord model.FileRecord
+	)
 	// 开启事务
-	g := db.G.Begin()
 	defer func() {
-		if resp.Err != nil {
-			g.Rollback()
-			return
+		r.Data = fileRecord
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
 		}
-		g.Commit()
 	}()
 	// hash文件内容
 	file.Path = conf.C.File.Path
-	if resp.Err = GetHash(g, &file, []byte(p.File), postFix, p.File); resp.Err != nil {
+	if r.Err = GetHash(tx, &file, []byte(p.File), postFix, p.File); r.Err != nil {
+		r.UploadFileFailed()
 		return
 	}
 
 	// 查询用户文件记录
-	fileRecord := model.FileRecord{Uid: c.Admin.Id, Name: p.FileName, FileType: p.FileType, FileId: file.Id}
+	fileRecord = model.FileRecord{Uid: c.Admin.Id, Name: p.FileName, FileType: p.FileType, FileId: file.Id}
 	fileRecord.FileId = file.Id
-	if resp.Err = g.Save(&fileRecord).Error; resp.Err != nil {
+	if r.Err = tx.Save(&fileRecord).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = fileRecord
+	c.SaveLog(tx, fmt.Sprintf("上传文件 id:%v name:%v file_type%v", fileRecord.Id, fileRecord.Name, fileRecord.FileType), model.OperateLogTypeAdd)
 	return
 }
 

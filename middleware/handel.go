@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-
 	"github.com/zhangshanwen/shard/initialize/service"
 )
 

@@ -18,7 +18,8 @@ func InitGinLogger() {
 
 func InitLog() {
 	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors: true,
+		ForceColors:   true,
+		FullTimestamp: true,
 	})
 	Writer = io.MultiWriter(os.Stdout, &lumberjack.Logger{
 		Filename:   "log/shard.log",

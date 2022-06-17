@@ -6,6 +6,7 @@ import (
 )
 
 func main() {
+	//rpc.SendServer()
 	initialize.Initialize() // 注册服务
 	router.InitRouter()     // 注册路由
 }

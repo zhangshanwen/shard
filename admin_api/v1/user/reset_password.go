@@ -1,34 +1,48 @@
 package user
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/conf"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ResetPassword(c *service.AdminContext) (resp service.Res) {
+func ResetPassword(c *service.AdminContext) (r service.Res) {
 	pId := param.UriId{}
-	if resp.Err = c.BindUri(&pId); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&pId); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	user := model.User{}
-	g := db.G
-	if resp.Err = g.First(&user, pId.Id).Error; resp.Err != nil {
+	var (
+		m    model.User
+		tx   = db.G.Begin()
+		resp = response.PasswordResponse{}
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	if r.Err = tx.First(&m, pId.Id).Error; r.Err != nil {
+		r.NotFound()
 		return
 	}
-	if resp.Err = user.SetPassword(conf.C.ResetPassword); resp.Err != nil {
+	if r.Err = m.SetPassword(conf.C.ResetPassword); r.Err != nil {
+		r.SetPasswordError()
 		return
 	}
-	if resp.Err = g.Model(&user).Updates(&model.User{
-		Password: user.Password,
-	}).Error; resp.Err != nil {
+	if r.Err = tx.Model(&m).Updates(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = response.PasswordResponse{Password: conf.C.ResetPassword}
+	resp.Password = conf.C.ResetPassword
+	c.SaveLog(tx, fmt.Sprintf("重置用户(id:%v username:%v) 密码 ->%v", m.Id, m.Username, conf.C.ResetPassword), model.OperateLogTypeUpdate)
 	return
 }

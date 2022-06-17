@@ -14,7 +14,6 @@ type (
 		Name     string       `json:"name"`                                                                                             // 权限名称
 		ParentId int64        `json:"parent_id"`                                                                                        // 父节点id
 		Key      string       `json:"key"`                                                                                              // 前端唯一key
-		Icon     string       `json:"icon"`                                                                                             // 前端icon
 		Routes   []Route      `json:"routes"                gorm:"many2many:permission_route;"`                                         // 路由
 		Children []Permission `json:"children"              gorm:"foreignKey:parent_id;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"` // 子页面
 		Roles    []Role       `json:"roles"                 gorm:"many2many:role_permission;"`

@@ -2,37 +2,51 @@ package user
 
 import (
 	"fmt"
+
 	"github.com/jinzhu/copier"
 
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (resp service.Res) {
+func Get(c *service.AdminContext) (r service.Res) {
 	p := param.UserRecords{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	g := db.G.Model(&model.User{}).Preload("Wallet")
+	var (
+		tx   = db.G.Begin()
+		resp = response.UsersResponse{}
+		m    model.User
+		ms   []model.User
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	g := tx.Model(&m).Preload("Wallet")
 	if p.Username != "" {
 		g = g.Where(model.User{Username: fmt.Sprintf("%%%s%%", p.Username)})
 	}
-	r := response.UsersResponse{}
-	if resp.Err = db.FindByPagination(g, &p.Pagination, &r.Pagination); resp.Err != nil {
+	if r.Err = db.FindByPagination(g, &p.Pagination, &resp.Pagination); r.Err != nil {
 		return
 	}
-	var ms []model.User
-	if resp.Err = g.Find(&ms).Error; resp.Err != nil {
+	if r.Err = g.Find(&ms).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	if resp.Err = copier.Copy(&r.List, &ms); resp.Err != nil {
+	if r.Err = copier.Copy(&resp.List, &ms); r.Err != nil {
+		r.CopierError()
 		return
 	}
-	resp.Data = r
+	c.SaveLog(tx, "查询用户列表", model.OperateLogTypeSelect)
 	return
 }

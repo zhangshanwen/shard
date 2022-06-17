@@ -8,49 +8,52 @@ import (
 	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Register(c *service.Context) (resp service.Res) {
+func Register(c *service.Context) (r service.Res) {
 	p := param.Register{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ResCode = code.ParamsError
 		return
 	}
-	user := model.User{Username: p.Username}
-	g := db.G
-	g = g.Begin()
+	var (
+		user = model.User{Username: p.Username}
+		tx   = db.G.Begin()
+		resp = response.UserInfo{}
+	)
+
 	defer func() {
-		if resp.Err == nil {
-			g.Commit()
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
 		} else {
-			g.Rollback()
+			tx.Rollback()
 		}
 	}()
 	var count int64
-	if resp.Err = g.Where(&user).First(&user).Count(&count).Error; resp.Err != nil {
+	if r.Err = tx.Where(&user).First(&user).Count(&count).Error; r.Err != nil {
 		return
 	}
 	if count > 0 {
-		resp.Err = errors.New("username is existed")
-		resp.ResCode = code.UsernameIsExisted
+		r.Err = errors.New("username is existed")
+		r.ResCode = code.UsernameIsExisted
 		return
 	}
-	if resp.Err = copier.Copy(&user, &p); resp.Err != nil {
+	if r.Err = copier.Copy(&user, &p); r.Err != nil {
 		return
 	}
-	if resp.Err = user.SetPassword(p.Password); resp.Err != nil {
+	if r.Err = user.SetPassword(p.Password); r.Err != nil {
 		return
 	}
-	if resp.Err = g.Create(&user).Error; resp.Err != nil {
+	if r.Err = tx.Create(&user).Error; r.Err != nil {
 		return
 	}
-	r := response.UserInfo{}
-	if resp.Err = copier.Copy(&r, &user); resp.Err != nil {
+
+	if r.Err = copier.Copy(&resp, &user); r.Err != nil {
 		return
 	}
-	resp.Data = r
 	return
 }

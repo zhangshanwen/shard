@@ -1,34 +1,50 @@
 package permission
 
 import (
+	"fmt"
+
 	"github.com/jinzhu/copier"
-	"github.com/zhangshanwen/shard/code"
+
 	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (resp service.Res) {
+func Get(c *service.AdminContext) (r service.Res) {
 	p := param.PermissionRecords{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.Permission{}
-	var ms []model.Permission
-	g := db.G.Model(&m).Where(" parent_id = 0 ")
-	r := response.PermissionResponse{}
+	var (
+		ms   []model.Permission
+		m    model.Permission
+		resp = response.PermissionResponse{}
+		tx   = db.G.Begin()
+	)
+
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	g := tx.Model(&m).Where(" parent_id = 0 ")
 	// 使用signal 防止其他查询也使用AfterFind 钩子
-	if resp.Err = g.Set(common.PermissionFindChildren, true).Preload("Routes").Find(&ms).Error; resp.Err != nil {
+	if r.Err = g.Set(common.PermissionFindChildren, true).Preload("Routes").Find(&ms).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
 
-	if resp.Err = copier.Copy(&r.List, &ms); resp.Err != nil {
+	if r.Err = copier.Copy(&resp.List, &ms); r.Err != nil {
+		r.CopierError()
 		return
 	}
-	resp.Data = r
+	c.SaveLog(tx, fmt.Sprintf("获取权限列表"), model.OperateLogTypeSelect)
 	return
 }

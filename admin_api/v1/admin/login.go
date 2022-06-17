@@ -1,76 +1,84 @@
 package admin
 
 import (
-	"errors"
 	"fmt"
-	"github.com/zhangshanwen/shard/common"
-	"gorm.io/gorm"
 	"time"
 
 	"github.com/jinzhu/copier"
+	"gorm.io/gorm"
 
-	"github.com/zhangshanwen/shard/code"
+	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 )
 
-func Login(c *service.AdminContext) (resp service.Res) {
+func Login(c *service.AdminContext) (r service.Res) {
 	p := param.AdminLogin{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	admin := model.Admin{Username: p.Username}
-	g := db.G
-	g = g.Begin()
+	var (
+		resp = response.AdminRolePermissionResponse{}
+		tx   = db.G.Begin()
+		m    = model.Admin{Username: p.Username}
+	)
+
 	defer func() {
-		if resp.Err == nil {
-			g.Commit()
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
 		} else {
-			g.Rollback()
+			tx.Rollback()
 		}
 	}()
-	if resp.Err = g.Where(&admin).First(&admin).Error; resp.Err != nil {
+	if r.Err = tx.Where(&m).First(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
 
-	if !admin.CheckPassword(p.Password) {
-		resp.ResCode = code.ActPWdError
-		resp.Err = errors.New("ActPWdError")
+	if !m.CheckPassword(p.Password) {
+		r.ActPWdError()
 		return
 	}
-	if resp.Err = g.Model(&admin).Updates(&model.Admin{
+	if r.Err = tx.Model(&m).Where("id=?", m.Id).Updates(&model.Admin{
 		LastLoginTime: time.Now().Unix(),
-	}).Error; resp.Err != nil {
+	}).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	r := response.AdminRolePermissionResponse{}
-	if resp.Err = copier.Copy(&r, &admin); resp.Err != nil {
+	if r.Err = copier.Copy(&resp, &m); r.Err != nil {
 		return
 	}
 	var token string
-	token, resp.Err = tools.CreateToken(admin.Id)
-	if resp.Err != nil {
+	if token, r.Err = tools.CreateToken(m.Id); r.Err != nil {
+		r.LoginFailed()
 		return
 	}
-	r.Authorization = token
-	if resp.Err = rolePermission(g, c, &admin, &r); resp.Err != nil {
+	resp.Authorization = token
+	if r.Err = rolePermission(tx, c, &m, &resp); r.Err != nil {
+		r.DBError()
 		return
 	}
 	oss := tools.NewOss()
-	r.Avatar.Name = admin.Avatar
-	r.Avatar.Url = oss.GetUrl(admin.Avatar)
-	resp.Data = r
+	resp.Avatar.Name = m.Avatar
+	resp.Avatar.Url = oss.GetUrl(m.Avatar)
+	c.Admin = m
+	if r.Err = c.SaveLoginInfo(); r.Err != nil {
+		r.DBError()
+		return
+	}
+	c.SaveLog(tx, "登陆后台系统", model.OperateLogTypeSelect)
 	return
 }
 
-func rolePermission(g *gorm.DB, c *service.AdminContext, admin *model.Admin, r *response.AdminRolePermissionResponse) (err error) {
+func rolePermission(tx *gorm.DB, c *service.AdminContext, admin *model.Admin, resp *response.AdminRolePermissionResponse) (err error) {
 	m := model.Role{}
-	if err = g.Preload("Permissions").Preload("Permissions.Routes").First(&m, admin.RoleId).Error; err != nil {
+	if err = tx.Preload("Permissions").Preload("Permissions.Routes").First(&m, admin.RoleId).Error; err != nil {
 		return
 	}
 	routes := map[string]interface{}{}
@@ -81,7 +89,7 @@ func rolePermission(g *gorm.DB, c *service.AdminContext, admin *model.Admin, r *
 		}
 		permissionMap[item.Id] = item
 		if item.Key != "" {
-			r.Keys = append(r.Keys, item.Key)
+			resp.Keys = append(resp.Keys, item.Key)
 		}
 	}
 
@@ -99,7 +107,7 @@ func rolePermission(g *gorm.DB, c *service.AdminContext, admin *model.Admin, r *
 			}
 		}
 	}
-	if err = copier.Copy(&r.List, &parents); err != nil {
+	if err = copier.Copy(&resp.List, &parents); err != nil {
 		return
 	}
 	return

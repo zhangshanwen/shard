@@ -1,29 +1,44 @@
 package admin
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ChangePassword(c *service.AdminContext) (resp service.Res) {
+func ChangePassword(c *service.AdminContext) (r service.Res) {
 	p := param.PasswordParam{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	g := db.G
-	if resp.Err = c.Admin.SetPassword(p.Password); resp.Err != nil {
+	var (
+		tx   = db.G.Begin()
+		resp = response.PasswordResponse{}
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	if r.Err = c.Admin.SetPassword(p.Password); r.Err != nil {
+		r.SetPasswordError()
 		return
 	}
-	if resp.Err = g.Model(&c.Admin).Updates(&model.Admin{
+	if r.Err = tx.Model(&c.Admin).Updates(&model.Admin{
 		Password: c.Admin.Password,
-	}).Error; resp.Err != nil {
+	}).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = response.PasswordResponse{Password: p.Password}
+	resp.Password = p.Password
+	c.SaveLog(tx, fmt.Sprintf("修改密码%v->%v", c.Admin.Password, p.Password), model.OperateLogTypeUpdate)
 	return
 }

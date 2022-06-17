@@ -1,32 +1,45 @@
 package file
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 )
 
-func Detail(c *service.AdminContext) (resp service.Res) {
+func Detail(c *service.AdminContext) (r service.Res) {
 	p := param.UriId{}
-	if resp.Err = c.BindUri(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	var fileRecord = model.FileRecord{}
-	var r = response.FileDetail{}
-	if resp.Err = db.G.Preload("File").First(&fileRecord, p.Id).Error; resp.Err != nil {
+	var (
+		fileRecord = model.FileRecord{}
+		resp       = response.FileDetail{}
+		tx         = db.G.Begin()
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	if r.Err = tx.Preload("File").First(&fileRecord, p.Id).Error; r.Err != nil {
+		r.NotFound()
 		return
 	}
-	r.Id = fileRecord.Id
-	r.FileType = fileRecord.FileType
-	r.Name = fileRecord.Name
+	resp.Id = fileRecord.Id
+	resp.FileType = fileRecord.FileType
+	resp.Name = fileRecord.Name
 	if fileRecord.File != nil {
-		r.Code, _ = tools.FileToBase64(fileRecord.File.Hash, fileRecord.File.Path)
+		resp.Code, _ = tools.FileToBase64(fileRecord.File.Hash, fileRecord.File.Path)
 	}
-	resp.Data = r
+	c.SaveLog(tx, fmt.Sprintf("查看文件详情 id:%v name:%v file_type%v", resp.Id, resp.Name, resp.FileType), model.OperateLogTypeSelect)
 	return
 }

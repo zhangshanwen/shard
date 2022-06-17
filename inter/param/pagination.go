@@ -28,7 +28,7 @@ func (p *Pagination) OrderBy() string {
 	if p.Order == "" {
 		orderBy = "id"
 	}
-	if p.Sort {
+	if !p.Sort {
 		orderBy += " desc"
 	}
 	return orderBy

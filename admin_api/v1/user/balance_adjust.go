@@ -1,39 +1,41 @@
 package user
 
 import (
-	"errors"
+	"fmt"
+
 	"gorm.io/gorm"
 
-	"github.com/zhangshanwen/shard/code"
-	"github.com/zhangshanwen/shard/initialize/conf"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func BalanceAdjust(c *service.AdminContext) (resp service.Res) {
+func BalanceAdjust(c *service.AdminContext) (r service.Res) {
 	pId := param.UriId{}
-	if resp.Err = c.BindUri(&pId); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&pId); r.Err != nil {
+		r.ParamsError()
 		return
 	}
 	p := param.AdjustBalance{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	user := model.User{}
-	g := db.G.Begin()
+	var (
+		u  model.User
+		tx = db.G.Begin()
+	)
 	defer func() {
-		if resp.Err != nil {
-			g.Rollback()
+		if r.Err == nil {
+			tx.Commit()
+
 		} else {
-			g.Commit()
+			tx.Rollback()
 		}
 	}()
-	if resp.Err = g.Preload("Wallet").First(&user, pId.Id).Error; resp.Err != nil {
+	if r.Err = tx.Preload("Wallet").First(&u, pId.Id).Error; r.Err != nil {
+		r.NotFound()
 		return
 	}
 	var recordType model.WalletRecordType
@@ -43,30 +45,32 @@ func BalanceAdjust(c *service.AdminContext) (resp service.Res) {
 		recordType = model.WalletRecordTypeBackendIncrease
 	}
 	record := model.WalletRecord{Amount: p.Amount, RecordType: recordType}
-	if user.Wallet == nil {
+	if u.Wallet == nil {
 		if p.Amount < 0 {
-			resp.ResCode = code.AmountLtZero
-			resp.Err = errors.New("AmountLtZero")
+			r.AmountLtZero()
 			return
 		}
-		user.Wallet = &model.Wallet{Uid: user.Id, Balance: p.Amount}
-		if resp.Err = g.Create(&user.Wallet).Error; resp.Err != nil {
+		u.Wallet = &model.Wallet{Uid: u.Id, Balance: p.Amount}
+		if r.Err = tx.Create(&u.Wallet).Error; r.Err != nil {
+			r.DBError()
 			return
 		}
-		record.WalletId = user.Wallet.Id
+		record.WalletId = u.Wallet.Id
 	} else {
-		if user.Wallet.Balance+p.Amount < 0 {
-			resp.ResCode = code.BalanceLess
-			resp.Err = errors.New("BalanceLess")
+		if u.Wallet.Balance+p.Amount < 0 {
+			r.BalanceLess()
 			return
 		}
-		if resp.Err = g.Model(&user.Wallet).Update("balance", gorm.Expr("balance + ? ", p.Amount)).Error; resp.Err != nil {
+		if r.Err = tx.Model(&u.Wallet).Update("balance", gorm.Expr("balance + ? ", p.Amount)).Error; r.Err != nil {
+			r.DBError()
 			return
 		}
 	}
-	if resp.Err = g.Create(&record).Error; resp.Err != nil {
+	if r.Err = tx.Create(&record).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = response.PasswordResponse{Password: conf.C.ResetPassword}
+	c.SaveLog(tx, fmt.Sprintf("修改用户(id:%v,username:%v)余额 %v ,修改后余额 %v",
+		u.Id, u.Username, p.Amount, u.Wallet.Balance), model.OperateLogTypeUpdate)
 	return
 }

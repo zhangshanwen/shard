@@ -1,39 +1,45 @@
 package permission
 
 import (
+	"fmt"
+
 	"github.com/jinzhu/copier"
-	"github.com/zhangshanwen/shard/code"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Edit(c *service.AdminContext) (resp service.Res) {
+func Edit(c *service.AdminContext) (r service.Res) {
 	pId := param.UriId{}
-	if resp.Err = c.BindUri(&pId); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&pId); r.Err != nil {
+		r.ParamsError()
 		return
 	}
 	p := param.Permission{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.Permission{}
-	g := db.G
-	g = g.Begin()
+	var (
+		m  model.Permission
+		tx = db.G.Begin()
+	)
 	defer func() {
-		if resp.Err == nil {
-			g.Commit()
+		r.Data = m
+		if r.Err == nil {
+			tx.Commit()
 		} else {
-			g.Rollback()
+			tx.Rollback()
 		}
 	}()
-	if resp.Err = g.First(&m, pId.Id).Error; resp.Err != nil {
+	if r.Err = tx.First(&m, pId.Id).Error; r.Err != nil {
+		r.NotFound()
 		return
 	}
-	if resp.Err = copier.Copy(&m, &p); resp.Err != nil {
+	if r.Err = copier.Copy(&m, &p); r.Err != nil {
+		r.CopierError()
 		return
 	}
 	var routes []model.Route
@@ -42,12 +48,14 @@ func Edit(c *service.AdminContext) (resp service.Res) {
 			BaseModel: model.BaseModel{Id: routeId},
 		})
 	}
-	if resp.Err = g.Model(&m).Association("Routes").Replace(&routes); resp.Err != nil {
+	if r.Err = tx.Model(&m).Association("Routes").Replace(&routes); r.Err != nil {
+		r.DBError()
 		return
 	}
-	if resp.Err = g.Save(&m).Error; resp.Err != nil {
+	if r.Err = tx.Save(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = m
+	c.SaveLog(tx, fmt.Sprintf("修改权限 id:%v name:%v", m.Id, m.Name), model.OperateLogTypeUpdate)
 	return
 }

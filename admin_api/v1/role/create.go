@@ -1,47 +1,52 @@
 package role
 
 import (
-	"errors"
+	"fmt"
+
 	"github.com/jinzhu/copier"
 
-	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Create(c *service.AdminContext) (resp service.Res) {
+func Create(c *service.AdminContext) (r service.Res) {
 	p := param.Role{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.Role{Name: p.Name}
-	g := db.G
-	g = g.Begin()
+	var (
+		m  = model.Role{Name: p.Name}
+		tx = db.G.Begin()
+	)
+
 	defer func() {
-		if resp.Err == nil {
-			g.Commit()
+		r.Data = m
+		if r.Err == nil {
+			tx.Commit()
 		} else {
-			g.Rollback()
+			tx.Rollback()
 		}
 	}()
 	var count int64
-	if resp.Err = g.Model(&m).Where(&m).Count(&count).Error; resp.Err != nil {
+	if r.Err = tx.Model(&m).Where(&m).Count(&count).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
 	if count > 0 {
-		resp.ResCode = code.NameIsExisted
-		resp.Err = errors.New("NameIsExisted")
+		r.NameIsExisted()
 		return
 	}
-	if resp.Err = copier.Copy(&m, &p); resp.Err != nil {
+	if r.Err = copier.Copy(&m, &p); r.Err != nil {
+		r.CopierError()
 		return
 	}
-	if resp.Err = g.Create(&m).Error; resp.Err != nil {
+	if r.Err = tx.Create(&m).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = m
+	c.SaveLog(tx, fmt.Sprintf("创建角色 id:%v name:%v", m.Id, m.Name), model.OperateLogTypeAdd)
 	return
 }

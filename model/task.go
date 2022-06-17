@@ -1,29 +1,59 @@
 package model
 
+import (
+	"time"
+
+	"github.com/zhangshanwen/shard/common"
+)
+
 type (
 	Status int8
 	Task   struct {
 		BaseModel
-		Name    string `json:"name"`     // 任务名称
-		Spec    string `json:"spec"`     // 任务执行时间
-		Remark  string `json:"remark"`   // 备注
-		Status  Status `json:"status"`   // 状态 1:正常 0:停止
-		BeginAt int64  `json:"begin_at"` // 定时任务开始时间
+		Name         string    `json:"name"`           // 任务名称
+		HostId       int64     `json:"host_id"`        // 主机id
+		Status       Status    `json:"status"`         // 状态 -3:失败 -2:过期 -1:停止 0:待生效 1:生效中
+		Cmd          string    `json:"cmd"`            // 任务指令
+		Spec         string    `json:"spec"`           // 执行时刻
+		EffectTime   int64     `json:"effect_time"`    // 生效时间
+		ExpiryTime   int64     `json:"expiry_time"`    // 失效时间
+		NextExecTime int64     `json:"next_exec_time"` // 下次执行时间
+		Comment      string    `json:"comment"`        // 备注
+		TaskLogs     []TaskLog `gorm:"foreignKey:TaskId"`
+		Host         Host      `gorm:"foreignkey:HostId;rerences:Id"`
+	}
+	TaskLog struct {
+		BaseModel
+		TaskId  int64  `json:"task_id"` // 执行记录
+		Status  uint8  `json:"status"`  // 状态 0 失败 1 成功
+		Comment string `json:"comment"` // 备注
 	}
 )
 
 const (
-	StatusStop   Status = 2
-	StatusNormal Status = 1
+	StatusFailed Status = iota - 3
+	StatusExpiry
+	StatusStop
+	StatusIdle
+	StatusRunning
 )
 
-func (t *Task) Run() {
+func (t *Task) Verify() (err error) {
+	t.Status = StatusIdle
+	if t.ExpiryTime == 0 {
+		t.Status = StatusRunning
+		return
+	}
 
-}
-func (t *Task) GetSpec() string {
-	return t.Spec
-
-}
-func (t *Task) GetId() int64 {
-	return t.Id
+	now := time.Now().Unix()
+	if t.ExpiryTime+60*60*24*1 <= now {
+		return common.ExpiryTimeShouldNotBeLessThanOneDay
+	}
+	if now >= t.ExpiryTime {
+		return common.ExpiryTimeShouldNotBeLessThanCurrentTime
+	}
+	if now >= t.EffectTime {
+		t.Status = StatusRunning
+	}
+	return
 }

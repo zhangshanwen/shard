@@ -63,6 +63,10 @@ func AutoMigrate() {
 		&model.FileRecord{},
 
 		&model.Task{},
+		&model.TaskLog{},
+
+		&model.Host{},
+		&model.OperateLog{},
 	)
 	logrus.Info("--------mysql_auto_migrate_end---------")
 }

@@ -5,49 +5,53 @@ import (
 	"github.com/zhangshanwen/shard/code"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 	"time"
 )
 
-func Login(c *service.Context) (resp service.Res) {
+func Login(c *service.Context) (r service.Res) {
 	p := param.Login{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ResCode = code.ParamsError
 		return
 	}
-	user := model.User{Username: p.Username}
-	g := db.G
-	if resp.Err = g.Where(&user).Preload("Wallet").First(&user).Error; resp.Err != nil {
+	var (
+		m    = model.User{Username: p.Username}
+		tx   = db.G
+		resp = response.UserInfo{}
+	)
+	defer func() {
+		r.Data = resp
+	}()
+	if r.Err = tx.Where(&m).Preload("Wallet").First(&m).Error; r.Err != nil {
 		return
 	}
-	if !user.CheckPassword(p.Password) {
-		resp.ResCode = code.ActPWdError
+	if !m.CheckPassword(p.Password) {
+		r.ResCode = code.ActPWdError
 	}
-	r := response.UserInfo{}
-	if resp.Err = copier.Copy(&r, &user); resp.Err != nil {
+	if r.Err = copier.Copy(&r, &m); r.Err != nil {
 		return
 	}
 	var token string
-	token, resp.Err = tools.CreateToken(user.Id)
-	if resp.Err != nil {
+	token, r.Err = tools.CreateToken(m.Id)
+	if r.Err != nil {
 		return
 	}
-	if resp.Err = g.Model(&user).Updates(&model.User{
+	if r.Err = tx.Model(&m).Updates(&model.User{
 		LastLoginTime: time.Now().Unix(),
-	}).Error; resp.Err != nil {
+	}).Error; r.Err != nil {
 		return
 	}
-	if user.Wallet == nil {
-		user.Wallet = &model.Wallet{Uid: user.Id}
-		if resp.Err = g.Create(&user.Wallet).Error; resp.Err != nil {
+	if m.Wallet == nil {
+		m.Wallet = &model.Wallet{Uid: m.Id}
+		if r.Err = tx.Create(&m.Wallet).Error; r.Err != nil {
 			return
 		}
 	}
-	r.Balance = user.Wallet.Balance
-	r.Authorization = token
-	resp.Data = r
+	resp.Balance = m.Wallet.Balance
+	resp.Authorization = token
 	return
 }

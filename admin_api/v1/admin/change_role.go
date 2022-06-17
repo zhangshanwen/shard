@@ -1,38 +1,56 @@
 package admin
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ChangeRole(c *service.AdminContext) (resp service.Res) {
+func ChangeRole(c *service.AdminContext) (r service.Res) {
 	pId := param.UriId{}
-	if resp.Err = c.BindUri(&pId); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.BindUri(&pId); r.Err != nil {
+		r.ParamsError()
 		return
 	}
 	p := param.AdminChangeRole{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	g := db.G
-	m := model.Admin{}
+	var (
+		tx = db.G.Begin()
+		m  = model.Admin{}
+	)
+	defer func() {
+		r.Data = m.Role
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
 	if pId.Id == c.Admin.Id {
 		m = c.Admin
 	} else {
-		if resp.Err = g.First(&m, pId).Error; resp.Err != nil {
+		if r.Err = tx.First(&m, pId).Error; r.Err != nil {
+			r.DBError()
 			return
 		}
 	}
-	if resp.Err = g.Model(&m).Updates(&model.Admin{
-		RoleId: p.RoleId,
-	}).Error; resp.Err != nil {
+	role := model.Role{}
+	if r.Err = tx.First(&role, p.RoleId).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = m.Role
+	m.RoleId = p.RoleId
+	if r.Err = tx.Model(&m).Updates(&m).Error; r.Err != nil {
+		r.DBError()
+		return
+	}
+
+	c.SaveLog(tx, fmt.Sprintf("修改管理员 %v,角色%v->%v", m.Username, c.Admin.Role.Name, role.Name), model.OperateLogTypeUpdate)
 	return
 }

@@ -1,29 +1,44 @@
 package file
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (resp service.Res) {
+func Get(c *service.AdminContext) (r service.Res) {
 	p := param.FileRecords{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	m := model.FileRecord{Uid: c.Admin.Id}
-	g := db.G.Model(&m).Where(&m)
-	r := response.FileResponse{}
-	if resp.Err = db.FindByPagination(g, &p.Pagination, &r.Pagination); resp.Err != nil {
+	var (
+		m    = model.FileRecord{Uid: c.Admin.Id}
+		tx   = db.G.Begin()
+		resp = response.FileResponse{}
+	)
+
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	g := tx.Model(&m).Where(&m)
+	if r.Err = db.FindByPagination(g, &p.Pagination, &resp.Pagination); r.Err != nil {
+		r.DBError()
 		return
 	}
-	if resp.Err = g.Find(&r.List).Error; resp.Err != nil {
+	if r.Err = g.Find(&resp.List).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = r
+	c.SaveLog(tx, fmt.Sprintf("查看文件列表"), model.OperateLogTypeSelect)
 	return
 }

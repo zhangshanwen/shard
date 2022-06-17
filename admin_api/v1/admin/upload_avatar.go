@@ -1,25 +1,38 @@
 package admin
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"fmt"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
+	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func UploadAvatar(c *service.AdminContext) (resp service.Res) {
+func UploadAvatar(c *service.AdminContext) (r service.Res) {
 	p := param.AdminUploadAvatar{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.DBError()
 		return
 	}
-	g := db.G
-	if resp.Err = g.Model(&c.Admin).Updates(&model.Admin{
+	var (
+		tx = db.G.Begin()
+	)
+	defer func() {
+		r.Data = c.Admin
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	if r.Err = tx.Model(&c.Admin).Updates(&model.Admin{
 		Avatar: p.Avatar,
-	}).Error; resp.Err != nil {
+	}).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = c.Admin
+
+	c.SaveLog(tx, fmt.Sprintf("上传头像"), model.OperateLogTypeUpdate)
 	return
 }

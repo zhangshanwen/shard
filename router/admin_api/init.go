@@ -19,5 +19,6 @@ func RegisterBackendV1Router() {
 	v1.InitOss(group)
 	v1.InitFile(group)
 	v1.InitTask(group)
-
+	v1.InitHost(group)
+	v1.InitOperateLog(group)
 }

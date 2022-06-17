@@ -1,28 +1,47 @@
 package task
 
 import (
-	"github.com/zhangshanwen/shard/code"
+	"github.com/jinzhu/copier"
+
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"github.com/zhangshanwen/shard/internal/param"
-	"github.com/zhangshanwen/shard/internal/response"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (resp service.Res) {
+func Get(c *service.AdminContext) (r service.Res) {
 	p := param.Task{}
-	if resp.Err = c.Rebind(&p); resp.Err != nil {
-		resp.ResCode = code.ParamsError
+	if r.Err = c.Rebind(&p); r.Err != nil {
+		r.ParamsError()
 		return
 	}
-	g := db.G.Model(&model.Task{})
-	r := response.TaskResponse{}
-	if resp.Err = db.FindByPagination(g, &p.Pagination, &r.Pagination); resp.Err != nil {
+	var (
+		tx    = db.G.Begin()
+		resp  = response.TaskResponse{}
+		m     model.Task
+		tasks []model.Task
+	)
+	defer func() {
+		r.Data = resp
+		if r.Err == nil {
+			tx.Commit()
+		} else {
+			tx.Rollback()
+		}
+	}()
+	g := tx.Model(&m)
+	if r.Err = db.FindByPagination(g, &p.Pagination, &resp.Pagination); r.Err != nil {
+		r.DBError()
 		return
 	}
-	if resp.Err = g.Find(&r.List).Error; resp.Err != nil {
+	if r.Err = g.Preload("Host").Find(&tasks).Error; r.Err != nil {
+		r.DBError()
 		return
 	}
-	resp.Data = r
+	if r.Err = copier.Copy(&resp.List, &tasks); r.Err != nil {
+		r.CopierError()
+		return
+	}
 	return
 }
