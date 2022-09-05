@@ -6,6 +6,7 @@ import (
 	"github.com/zhangshanwen/shard/initialize/logger"
 	"github.com/zhangshanwen/shard/initialize/node"
 	"github.com/zhangshanwen/shard/initialize/task"
+	"github.com/zhangshanwen/shard/tools"
 )
 
 func Initialize() {
@@ -14,4 +15,5 @@ func Initialize() {
 	db.InitDb()      // 初始化数据库
 	task.InitTask()  // 初始化任务
 	node.InitNode()  // 初始化node
+	tools.Load()     // 初始化jwt
 }

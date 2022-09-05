@@ -9,4 +9,5 @@ func main() {
 	//rpc.SendServer()
 	initialize.Initialize() // 注册服务
 	router.InitRouter()     // 注册路由
+	// TODO 初始化flv，rtmp路径
 }

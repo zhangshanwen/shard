@@ -19,7 +19,7 @@ normal_build = go build  -ldflags "-X  $(time_flag) -X  $(project_flag)  -X $(gi
 
 all: build
 
-check: test all build clean fmt todo legacy
+check: test.go all build clean fmt todo legacy
 
 
 build:

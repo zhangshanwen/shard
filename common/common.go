@@ -58,9 +58,11 @@ const (
 	Check       = "check"
 	File        = "file"
 	Host        = "host"
+	Live        = "live"
 	Log         = "log"
 	Task        = "task"
 	Stop        = "stop"
 	Run         = "run"
 	Room        = "room"
+	Watch       = "watch"
 )

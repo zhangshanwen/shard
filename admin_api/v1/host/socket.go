@@ -59,7 +59,7 @@ func Socket(c *service.AdminContext) {
 	}
 	if ss, err = tools.NewSshSocket(host.Username, host.Password, host.Host, host.Port); err != nil {
 		_ = tx.Model(&m).Where("id=? and status=?", host.Id, 1).Update("status", 0)
-		logrus.Errorf("创建ssh连接是失败")
+		logrus.Errorf("创建ssh连接失败")
 		return
 	}
 	_ = tx.Model(&m).Where("id=? and status=?", host.Id, 0).Update("status", 1)

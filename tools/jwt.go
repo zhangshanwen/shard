@@ -32,7 +32,7 @@ type Claims struct {
 	Payload
 }
 
-func load() {
+func Load() {
 	var err error
 	var privateBytes, publicBytes []byte
 	rasPath += string(os.PathSeparator)
@@ -85,8 +85,4 @@ func VerifyToken(tokenString string) (claims *Claims, err error) {
 	}
 	claims = token.Claims.(*Claims)
 	return
-}
-
-func init() {
-	load()
 }

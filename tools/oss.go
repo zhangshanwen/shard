@@ -19,7 +19,7 @@ var (
 func NewOss() Oss {
 	if o == nil {
 		once.Do(func() {
-			o = NewQiNiuImage(conf.C.Oss.AccessKey, conf.C.Oss.SecretKey, conf.C.Oss.Domain)
+			o = NewQiNiuOss(conf.C.Oss.AccessKey, conf.C.Oss.SecretKey, conf.C.Oss.Domain)
 		})
 	}
 

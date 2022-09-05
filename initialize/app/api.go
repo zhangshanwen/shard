@@ -2,6 +2,7 @@ package app
 
 import (
 	"fmt"
+	ut "github.com/go-playground/universal-translator"
 	"strings"
 
 	"github.com/deckarep/golang-set"
@@ -13,10 +14,14 @@ import (
 )
 
 var R = &gin.Engine{}
+var (
+	trans ut.Translator
+)
 
 func init() {
 	gin.ForceConsoleColor()
 	R = gin.Default()
+
 }
 
 func CheckUrl(Method, Path string) (isExited bool) {
