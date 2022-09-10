@@ -8,7 +8,7 @@ import (
 )
 
 func Token(c *service.AdminContext) (r service.Res) {
-	oss := tools.NewOss()
+	oss, _ := tools.NewOss()
 	resp := response.ImageToken{}
 	defer func() {
 		r.Data = resp

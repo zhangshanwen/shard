@@ -1,9 +1,14 @@
 package tools
 
 import (
+	"bytes"
+	"context"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/qiniu/go-sdk/v7/storage"
+	"github.com/sirupsen/logrus"
+	"github.com/zhangshanwen/shard/initialize/conf"
+	"net/url"
+	"time"
 )
 
 type MinioOss struct {
@@ -11,21 +16,39 @@ type MinioOss struct {
 	domain string
 }
 
-func NewMinioImage(accessKey, secretKey, domain string) (q *MinioOss) {
-	c, _ := minio.New(domain, &minio.Options{
+func NewMinioImage(accessKey, secretKey, domain string) (q *MinioOss, err error) {
+	q = &MinioOss{
+		domain: domain,
+		Mac:    &minio.Client{},
+	}
+	q.Mac, err = minio.New(domain, &minio.Options{
 		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
 		Secure: false,
 	})
-	return &MinioOss{
-		Mac:    c,
-		domain: domain,
-	}
+	return
 
 }
 func (q *MinioOss) NewToken(bucket string) (t string) {
 	return
 }
 
-func (q *MinioOss) GetUrl(key string) string {
-	return storage.MakePublicURL(q.domain, key)
+func (q *MinioOss) GetUrl(ctx context.Context, key string) (s string) {
+	var (
+		u   *url.URL
+		err error
+	)
+	if u, err = q.Mac.PresignedGetObject(context.Background(), conf.C.Oss.AdminBuket, key, time.Minute*30, url.Values{}); err != nil {
+		return
+	}
+	return u.String()
+}
+
+func (q *MinioOss) UploadFile(ctx context.Context, filename string, file []byte) (key string, err error) {
+	var info minio.UploadInfo
+	if info, err = q.Mac.PutObject(ctx, conf.C.Oss.AdminBuket, filename, bytes.NewBuffer(file), int64(len(file)), minio.PutObjectOptions{}); err != nil {
+		return
+	}
+	logrus.Info(info)
+	logrus.Info("----------")
+	return info.Key, nil
 }

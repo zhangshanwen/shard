@@ -52,6 +52,7 @@ const (
 	Permissions = "permissions"
 	Oss         = "oss"
 	Token       = "token"
+	Upload      = "upload"
 	Users       = "users"
 	User        = "user"
 	Roles       = "roles"

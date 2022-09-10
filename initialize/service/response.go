@@ -52,150 +52,159 @@ func Json(c *gin.Context, r Res) {
 	c.JSON(r.StatusCode, r)
 }
 func (r *Res) AuthFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("AuthFailed %v\n", r.Err)
 	r.StatusCode = http.StatusUnauthorized
 	r.ResCode = code.AuthFailed
 	r.Err = common.AuthFailed
 }
 func (r *Res) NoPermission() {
-	logrus.Error(r.Err)
+	logrus.Errorf("NoPermission %v\n", r.Err)
 	r.StatusCode = http.StatusForbidden
 	r.ResCode = code.NoPermission
 	r.Err = common.NoPermission
 }
 
 func (r *Res) DBError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("DBError %v\n", r.Err)
 	r.ResCode = code.DBError
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.DBError
 }
 
 func (r *Res) NotFound() {
-	logrus.Error(r.Err)
+	logrus.Errorf("NotFound %v\n", r.Err)
 	r.ResCode = code.NotFound
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.NotFound
 }
 
 func (r *Res) NotChange() {
+	logrus.Errorf("NotChange %v\n", r.Err)
 	r.ResCode = code.NotChange
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.NotChange
 
 }
 func (r *Res) ParamsError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("ParamsError %v\n", r.Err)
 	r.ResCode = code.ParamsError
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.ParamsError
 }
 
 func (r *Res) SetPasswordError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("SetPasswordError %v\n", r.Err)
 	r.ResCode = code.SetPasswordError
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.SetPasswordError
 }
 func (r *Res) UsernameIsExisted() {
+	logrus.Errorf("UsernameIsExisted %v\n", r.Err)
 	r.ResCode = code.UsernameIsExisted
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.UsernameExisted
 }
 func (r *Res) NameIsExisted() {
+	logrus.Errorf("NameIsExisted %v\n", r.Err)
 	r.ResCode = code.NameIsExisted
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.NameIsExisted
 }
 
 func (r *Res) CopierError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("CopierError %v\n", r.Err)
 	r.ResCode = code.CopierError
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.CopierError
 }
 
 func (r *Res) ActPWdError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("ActPWdError %v\n", r.Err)
 	r.ResCode = code.CopierError
 	r.StatusCode = http.StatusUnauthorized
 	r.Err = common.ActPWdError
 }
 func (r *Res) LoginFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("LoginFailed %v\n", r.Err)
 	r.ResCode = code.LoginFailed
 	r.StatusCode = http.StatusUnauthorized
 	r.Err = common.LoginFailed
 }
 func (r *Res) UploadFileFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("UploadFileFailed %v\n", r.Err)
 	r.ResCode = code.UploadFileFailed
 	r.StatusCode = http.StatusUnauthorized
 	r.Err = common.UploadFileFailed
 }
 func (r *Res) NotOwner() {
+	logrus.Errorf("NotOwner %v\n", r.Err)
 	r.ResCode = code.NotOwner
 	r.StatusCode = http.StatusUnauthorized
 	r.Err = common.NotOwner
 }
 
 func (r *Res) SystemError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("SystemError %v\n", r.Err)
 	r.ResCode = code.SystemError
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.SystemError
 }
 
 func (r *Res) RoomExisted() {
+	logrus.Errorf("RoomExisted %v\n", r.Err)
 	r.ResCode = code.RoomExisted
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.RoomExisted
 }
 
 func (r *Res) TaskVerifyError() {
-	logrus.Error(r.Err)
+	logrus.Errorf("TaskVerifyError %v\n", r.Err)
 	r.ResCode = code.TaskVerifyError
 	r.StatusCode = http.StatusBadRequest
 }
 
 func (r *Res) TaskAddFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("TaskAddFailed %v\n", r.Err)
 	r.ResCode = code.TaskAddFailed
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.TaskAddFailed
 }
 
 func (r *Res) TaskRunFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("TaskRunFailed %v\n", r.Err)
 	r.ResCode = code.TaskRunFailed
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.TaskRunFailed
 }
 
 func (r *Res) TaskStopFailed() {
-	logrus.Error(r.Err)
+	logrus.Errorf("TaskStopFailed %v\n", r.Err)
 	r.ResCode = code.TaskStopFailed
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.TaskStopFailed
 }
 func (r *Res) TaskIsRunning() {
+	logrus.Errorf("TaskIsRunning %v\n", r.Err)
 	r.ResCode = code.TaskIsRunning
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.TaskIsRunning
 
 }
 func (r *Res) TaskIsNotRunning() {
+	logrus.Errorf("TaskIsNotRunning %v\n", r.Err)
 	r.ResCode = code.TaskIsNotRunning
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.TaskIsNotRunning
 
 }
 func (r *Res) AmountLtZero() {
+	logrus.Errorf("AmountLtZero %v\n", r.Err)
 	r.ResCode = code.AmountLtZero
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.AmountLtZero
 }
 func (r *Res) BalanceLess() {
+	logrus.Errorf("BalanceLess %v\n", r.Err)
 	r.ResCode = code.BalanceLess
 	r.StatusCode = http.StatusBadRequest
 	r.Err = common.BalanceLess

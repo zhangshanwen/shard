@@ -10,6 +10,6 @@ import (
 func InitOss(Router *gin.RouterGroup) {
 	r := Router.Group(common.Oss)
 	{
-		r.GET(common.Token, v(oss.Token)) // 获取所有权限
+		r.GET(common.Token, v(oss.Token)) // 获取token
 	}
 }

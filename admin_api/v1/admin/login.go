@@ -64,9 +64,9 @@ func Login(c *service.AdminContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	oss := tools.NewOss()
+	oss, _ := tools.NewOss()
 	resp.Avatar.Name = m.Avatar
-	resp.Avatar.Url = oss.GetUrl(m.Avatar)
+	resp.Avatar.Url = oss.GetUrl(c, m.Avatar)
 	c.Admin = m
 	if r.Err = c.SaveLoginInfo(); r.Err != nil {
 		r.DBError()
