@@ -3,13 +3,12 @@ package host
 import (
 	"fmt"
 	"github.com/jinzhu/copier"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Post(c *service.AdminContext) (r service.Res) {
+func Post(c *service.AdminTxContext) (r service.Res) {
 	p := param.HostSave{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
@@ -22,16 +21,8 @@ func Post(c *service.AdminContext) (r service.Res) {
 		return
 	}
 	var (
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
-
-	defer func() {
-		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
-		}
-	}()
 	if r.Err = tx.Save(&m).Error; r.Err != nil {
 		r.DBError()
 		return

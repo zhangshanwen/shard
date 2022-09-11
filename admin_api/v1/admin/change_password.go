@@ -3,29 +3,25 @@ package admin
 import (
 	"fmt"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ChangePassword(c *service.AdminContext) (r service.Res) {
+func ChangePassword(c *service.AdminTxContext) (r service.Res) {
 	p := param.PasswordParam{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
 		return
 	}
 	var (
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		resp = response.PasswordResponse{}
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	if r.Err = c.Admin.SetPassword(p.Password); r.Err != nil {

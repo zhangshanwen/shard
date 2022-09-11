@@ -40,6 +40,9 @@ func failed(c *gin.Context, r Res) {
 
 func Json(c *gin.Context, r Res) {
 	r.ReqId = node.N.Generate()
+	if r.Data == nil {
+		r.Data = struct{}{}
+	}
 	if r.StatusCode == 0 {
 		if r.Err == nil {
 			success(c, r)

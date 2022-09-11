@@ -10,7 +10,7 @@ import (
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (r service.Res) {
+func Get(c *service.AdminTxContext) (r service.Res) {
 	p := param.FileRecords{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
@@ -18,16 +18,13 @@ func Get(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m    = model.FileRecord{Uid: c.Admin.Id}
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		resp = response.FileResponse{}
 	)
 
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	g := tx.Model(&m).Where(&m)

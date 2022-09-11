@@ -67,6 +67,37 @@ func AdminJwtHandel(fun func(ctx *service.AdminContext) service.Res) gin.Handler
 	}
 }
 
+func AdminJwtTxHandel(fun func(ctx *service.AdminTxContext) service.Res) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r, claims := verifyJwt(c)
+		if r.Err != nil {
+			r.AuthFailed()
+			service.Json(c, r)
+			return
+		}
+		sC := &service.AdminTxContext{}
+		sC.Context = c
+		sC.Tx = db.G.Begin()
+		if r.Err = sC.GetLoginInfo(claims.Payload.Uid); r.Err != nil {
+			r.AuthFailed()
+			service.Json(c, r)
+			return
+		}
+		if r.Err = verifyPermission(&sC.AdminContext); r.Err != nil {
+			r.NoPermission()
+			service.Json(c, r)
+			return
+		}
+		r = fun(sC)
+		if r.Err == nil {
+			sC.Tx.Commit()
+		} else {
+			sC.Tx.Rollback()
+		}
+		service.Json(c, r)
+	}
+}
+
 func verifyPermission(c *service.AdminContext) (err error) {
 	// verify last one  is number
 	path := c.Request.URL.Path

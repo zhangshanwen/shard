@@ -6,14 +6,13 @@ import (
 	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/code"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Create(c *service.AdminContext) (r service.Res) {
+func Create(c *service.AdminTxContext) (r service.Res) {
 	p := param.Register{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ResCode = code.ParamsError
@@ -24,14 +23,11 @@ func Create(c *service.AdminContext) (r service.Res) {
 			Username: p.Username,
 		}
 		resp = &response.UserInfo{}
-		tx   = db.G.Begin()
+		tx   = c.Tx
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	var count int64

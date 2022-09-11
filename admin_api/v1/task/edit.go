@@ -1,14 +1,13 @@
 package task
 
 import (
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/initialize/task"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Edit(c *service.AdminContext) (r service.Res) {
+func Edit(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -21,14 +20,11 @@ func Edit(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m  = model.Task{}
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
 	defer func() {
-		r.Data = m
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = m
 		}
 	}()
 

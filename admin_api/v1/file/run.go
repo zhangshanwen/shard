@@ -5,13 +5,12 @@ import (
 	"os/exec"
 	"path"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Run(c *service.AdminContext) (r service.Res) {
+func Run(c *service.AdminTxContext) (r service.Res) {
 	p := param.FileRunParams{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
@@ -19,15 +18,12 @@ func Run(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		f   model.FileRecord
-		tx  = db.G.Begin()
+		tx  = c.Tx
 		out []byte
 	)
 	defer func() {
-		r.Data = string(out)
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = string(out)
 		}
 	}()
 	if r.Err = tx.Preload("File").First(&f, p.Id).Error; r.Err != nil {

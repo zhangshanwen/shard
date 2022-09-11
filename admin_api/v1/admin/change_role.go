@@ -3,13 +3,12 @@ package admin
 import (
 	"fmt"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ChangeRole(c *service.AdminContext) (r service.Res) {
+func ChangeRole(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -21,15 +20,12 @@ func ChangeRole(c *service.AdminContext) (r service.Res) {
 		return
 	}
 	var (
-		tx = db.G.Begin()
+		tx = c.Tx
 		m  = model.Admin{}
 	)
 	defer func() {
-		r.Data = m.Role
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = m.Role
 		}
 	}()
 	if pId.Id == c.Admin.Id {

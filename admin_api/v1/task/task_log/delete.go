@@ -1,13 +1,12 @@
 package task_log
 
 import (
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Delete(c *service.AdminContext) (r service.Res) {
+func Delete(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -20,15 +19,9 @@ func Delete(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m  model.TaskLog
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
-	defer func() {
-		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
-		}
-	}()
+
 	if p.All {
 		r.Err = tx.Where("task_id=?", pId.Id).Delete(&m).Error
 	} else {

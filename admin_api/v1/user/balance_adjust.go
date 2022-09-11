@@ -5,13 +5,12 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func BalanceAdjust(c *service.AdminContext) (r service.Res) {
+func BalanceAdjust(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -24,16 +23,8 @@ func BalanceAdjust(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		u  model.User
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
-	defer func() {
-		if r.Err == nil {
-			tx.Commit()
-
-		} else {
-			tx.Rollback()
-		}
-	}()
 	if r.Err = tx.Preload("Wallet").First(&u, pId.Id).Error; r.Err != nil {
 		r.NotFound()
 		return

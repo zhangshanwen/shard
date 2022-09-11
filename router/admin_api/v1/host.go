@@ -10,11 +10,11 @@ import (
 func InitHost(Router *gin.RouterGroup) {
 	r := Router.Group(common.Host)
 	{
-		r.POST(common.UriEmpty, jwt(host.Post))  // 创建主机
-		r.GET(common.UriEmpty, jwt(host.Get))    // 主机列表
-		r.PUT(common.UriId, jwt(host.Edit))      // 修改主机
-		r.DELETE(common.UriId, jwt(host.Delete)) // 删除主机
-		r.POST(common.Room, jwt(host.Room))      // 创建房间
+		r.POST(common.UriEmpty, jwtTx(host.Post))  // 创建主机
+		r.GET(common.UriEmpty, jwtTx(host.Get))    // 主机列表
+		r.PUT(common.UriId, jwtTx(host.Edit))      // 修改主机
+		r.DELETE(common.UriId, jwtTx(host.Delete)) // 删除主机
+		r.POST(common.Room, jwtTx(host.Room))      // 创建房间
 	}
 	s := r.Group(common.Socket)
 	{

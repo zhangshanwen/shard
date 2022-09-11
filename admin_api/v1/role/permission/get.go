@@ -6,14 +6,13 @@ import (
 	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/common"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (r service.Res) {
+func Get(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -21,17 +20,14 @@ func Get(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		ms   []model.Permission
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		resp = response.RolePermissionResponse{}
 		m    model.Permission
 	)
 
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	g := tx.Model(&m).Where(" parent_id = 0 ")

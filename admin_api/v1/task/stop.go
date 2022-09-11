@@ -1,14 +1,13 @@
 package task
 
 import (
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/initialize/task"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Stop(c *service.AdminContext) (r service.Res) {
+func Stop(c *service.AdminTxContext) (r service.Res) {
 	p := param.UriId{}
 	if r.Err = c.BindUri(&p); r.Err != nil {
 		r.ParamsError()
@@ -16,15 +15,8 @@ func Stop(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m  = model.Task{}
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
-	defer func() {
-		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
-		}
-	}()
 	if r.Err = tx.First(&m, p.Id).Error; r.Err != nil {
 		r.NotFound()
 		return

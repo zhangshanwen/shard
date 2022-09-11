@@ -10,6 +10,6 @@ import (
 func InitRoute(Router *gin.RouterGroup) {
 	r := Router.Group(common.Routes)
 	{
-		r.GET(common.UriEmpty, jwt(route.Get)) // 获取所有路由
+		r.GET(common.UriEmpty, jwtTx(route.Get)) // 获取所有路由
 	}
 }

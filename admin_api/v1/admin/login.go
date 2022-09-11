@@ -16,7 +16,7 @@ import (
 	"github.com/zhangshanwen/shard/tools"
 )
 
-func Login(c *service.AdminContext) (r service.Res) {
+func Login(c *service.AdminTxContext) (r service.Res) {
 	p := param.AdminLogin{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
@@ -24,16 +24,13 @@ func Login(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		resp = response.AdminRolePermissionResponse{}
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		m    = model.Admin{Username: p.Username}
 	)
 
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	if r.Err = tx.Where(&m).First(&m).Error; r.Err != nil {
@@ -76,7 +73,7 @@ func Login(c *service.AdminContext) (r service.Res) {
 	return
 }
 
-func rolePermission(tx *gorm.DB, c *service.AdminContext, admin *model.Admin, resp *response.AdminRolePermissionResponse) (err error) {
+func rolePermission(tx *gorm.DB, c *service.AdminTxContext, admin *model.Admin, resp *response.AdminRolePermissionResponse) (err error) {
 	m := model.Role{}
 	if err = tx.Preload("Permissions").Preload("Permissions.Routes").First(&m, admin.RoleId).Error; err != nil {
 		return

@@ -3,7 +3,6 @@ package file
 import (
 	"fmt"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
@@ -11,7 +10,7 @@ import (
 	"github.com/zhangshanwen/shard/tools"
 )
 
-func Detail(c *service.AdminContext) (r service.Res) {
+func Detail(c *service.AdminTxContext) (r service.Res) {
 	p := param.UriId{}
 	if r.Err = c.BindUri(&p); r.Err != nil {
 		r.ParamsError()
@@ -20,14 +19,11 @@ func Detail(c *service.AdminContext) (r service.Res) {
 	var (
 		fileRecord = model.FileRecord{}
 		resp       = response.FileDetail{}
-		tx         = db.G.Begin()
+		tx         = c.Tx
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	if r.Err = tx.Preload("File").First(&fileRecord, p.Id).Error; r.Err != nil {

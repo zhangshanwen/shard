@@ -13,7 +13,7 @@ import (
 )
 
 // Room 创建房间
-func Room(c *service.AdminContext) (r service.Res) {
+func Room(c *service.AdminTxContext) (r service.Res) {
 	pId := param.Room{}
 	if r.Err = c.Rebind(&pId); r.Err != nil {
 		r.ParamsError()
@@ -24,15 +24,12 @@ func Room(c *service.AdminContext) (r service.Res) {
 		m      model.Host
 		roomId int64
 		res    = response.Room{}
-		tx     = db.G.Begin()
+		tx     = c.Tx
 	)
 
 	defer func() {
-		r.Data = res
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = res
 		}
 	}()
 	if r.Err = tx.First(&m, pId.Id).Error; r.Err != nil {

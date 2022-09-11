@@ -10,7 +10,7 @@ import (
 func InitOperateLog(Router *gin.RouterGroup) {
 	r := Router.Group(common.Log)
 	{
-		r.GET(common.UriEmpty, jwt(operate_log.Get)) // 日志列表
+		r.GET(common.UriEmpty, jwtTx(operate_log.Get)) // 日志列表
 	}
 
 }

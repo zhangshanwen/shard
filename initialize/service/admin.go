@@ -17,6 +17,10 @@ type AdminContext struct {
 	*gin.Context
 	Admin model.Admin
 }
+type AdminTxContext struct {
+	AdminContext
+	Tx *gorm.DB
+}
 
 func (c *AdminContext) Rebind(obj interface{}) (err error) {
 	if err = c.Bind(obj); err != nil {

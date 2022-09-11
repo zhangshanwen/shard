@@ -5,14 +5,13 @@ import (
 
 	"github.com/jinzhu/copier"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 )
 
-func Edit(c *service.AdminContext) (r service.Res) {
+func Edit(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -25,14 +24,11 @@ func Edit(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m  = model.Admin{}
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
 	defer func() {
-		r.Data = m
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = m
 		}
 	}()
 	if r.Err = tx.First(&m, pId.Id).Error; r.Err != nil {

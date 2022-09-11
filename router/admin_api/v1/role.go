@@ -11,15 +11,15 @@ import (
 func InitRole(Router *gin.RouterGroup) {
 	r := Router.Group(common.Roles)
 	{
-		r.GET(common.UriEmpty, jwt(role.Get))     // 获取角色
-		r.POST(common.UriEmpty, jwt(role.Create)) // 创建角色
-		r.PUT(common.UriId, jwt(role.Edit))       // 修改角色
-		r.DELETE(common.UriId, jwt(role.Delete))  // 删除角色
+		r.GET(common.UriEmpty, jwtTx(role.Get))     // 获取角色
+		r.POST(common.UriEmpty, jwtTx(role.Create)) // 创建角色
+		r.PUT(common.UriId, jwtTx(role.Edit))       // 修改角色
+		r.DELETE(common.UriId, jwtTx(role.Delete))  // 删除角色
 
 		permissions := r.Group(common.Permissions)
 		{
-			permissions.GET(common.UriId, jwt(permission.Get))  // 获取角色权限
-			permissions.PUT(common.UriId, jwt(permission.Edit)) // 修改角色权限
+			permissions.GET(common.UriId, jwtTx(permission.Get))  // 获取角色权限
+			permissions.PUT(common.UriId, jwtTx(permission.Edit)) // 修改角色权限
 		}
 	}
 }

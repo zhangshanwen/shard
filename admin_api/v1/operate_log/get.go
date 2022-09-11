@@ -12,24 +12,21 @@ import (
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (r service.Res) {
+func Get(c *service.AdminTxContext) (r service.Res) {
 	p := param.LogRecords{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
 		return
 	}
 	var (
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		ms   []model.OperateLog
 		resp = response.LogResponse{}
 		m    model.OperateLog
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	g := tx.Model(&m)

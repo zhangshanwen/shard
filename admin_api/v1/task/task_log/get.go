@@ -10,7 +10,7 @@ import (
 	"github.com/zhangshanwen/shard/model"
 )
 
-func Get(c *service.AdminContext) (r service.Res) {
+func Get(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.ShouldBindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -23,16 +23,13 @@ func Get(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		resp = response.TaskLogResponse{}
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		m    model.TaskLog
 		ms   []model.TaskLog
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	g := tx.Model(&m).Where("task_id=?", pId.Id)

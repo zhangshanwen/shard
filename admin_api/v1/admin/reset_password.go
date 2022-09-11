@@ -4,14 +4,13 @@ import (
 	"fmt"
 
 	"github.com/zhangshanwen/shard/initialize/conf"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func ResetPassword(c *service.AdminContext) (r service.Res) {
+func ResetPassword(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -19,15 +18,12 @@ func ResetPassword(c *service.AdminContext) (r service.Res) {
 	}
 	var (
 		m    model.Admin
-		tx   = db.G.Begin()
+		tx   = c.Tx
 		resp = response.PasswordResponse{Password: conf.C.ResetPassword}
 	)
 	defer func() {
-		r.Data = resp
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = resp
 		}
 	}()
 	if r.Err = tx.First(&m, pId.Id).Error; r.Err != nil {

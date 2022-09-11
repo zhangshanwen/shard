@@ -3,7 +3,6 @@ package file
 import (
 	"fmt"
 	"github.com/zhangshanwen/shard/initialize/conf"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
@@ -15,7 +14,7 @@ import (
 2.检测文件是否上传过该文件名，如果没有创建该记录，如果有则覆盖该记录
 */
 
-func Update(c *service.AdminContext) (r service.Res) {
+func Update(c *service.AdminTxContext) (r service.Res) {
 	pId := param.UriId{}
 	if r.Err = c.BindUri(&pId); r.Err != nil {
 		r.ParamsError()
@@ -34,17 +33,14 @@ func Update(c *service.AdminContext) (r service.Res) {
 
 	var (
 		file       model.File
-		tx         = db.G.Begin()
+		tx         = c.Tx
 		fileRecord = model.FileRecord{}
 	)
 	// 开启事务
 
 	defer func() {
-		r.Data = fileRecord
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = fileRecord
 		}
 	}()
 	// hash文件内容

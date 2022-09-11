@@ -6,27 +6,23 @@ import (
 	"github.com/zhangshanwen/shard/tools"
 	"strings"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
 )
 
-func UploadAvatar(c *service.AdminContext) (r service.Res) {
+func UploadAvatar(c *service.AdminTxContext) (r service.Res) {
 	p := param.AdminUploadAvatar{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.DBError()
 		return
 	}
 	var (
-		tx = db.G.Begin()
+		tx = c.Tx
 	)
 	defer func() {
-		r.Data = c.Admin
 		if r.Err == nil {
-			tx.Commit()
-		} else {
-			tx.Rollback()
+			r.Data = c.Admin
 		}
 	}()
 	var b []byte
