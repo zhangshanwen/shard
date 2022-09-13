@@ -1,13 +1,16 @@
 package logger
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
+
+	"github.com/zhangshanwen/shard/common"
 )
 
 var Writer io.Writer
@@ -19,9 +22,11 @@ func InitGinLogger() {
 
 func InitLog() {
 	logrus.SetFormatter(&logrus.TextFormatter{
-		ForceColors:   true,
-		FullTimestamp: true,
+		ForceColors:     true,
+		FullTimestamp:   true,
+		TimestampFormat: common.TimeFullFormat,
 	})
+	logrus.SetReportCaller(true)
 	l := &lumberjack.Logger{
 		Filename:   "log/shard.log",
 		MaxSize:    1024, // megabytes

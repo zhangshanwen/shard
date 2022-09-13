@@ -17,6 +17,9 @@ const (
 	// route  separator
 	RouteSeparator = "||"
 
+	//
+	TimeFullFormat = "2006-01-02 15:04:05"
+
 	// redis key
 	RedisRoutesKey = "shard_routes_%v"
 	AdminLoginKey  = "shard_admin_login_%v"

@@ -3,12 +3,12 @@ package admin
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/zhangshanwen/shard/tools"
 	"strings"
 
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
+	"github.com/zhangshanwen/shard/tools"
 )
 
 func UploadAvatar(c *service.AdminTxContext) (r service.Res) {
