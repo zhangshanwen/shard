@@ -49,6 +49,6 @@ func Room(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	res.Id = key
-	c.SaveLog(tx, fmt.Sprintf("创建房间(%v) id:%v name:%v connect_type:%v", key, m.Id, m.Name, m.ConnectType), model.OperateLogTypeAdd)
+	c.SaveLogAdd(tx, fmt.Sprintf("创建房间(%v) id:%v name:%v connect_type:%v", key, m.Id, m.Name, m.ConnectType))
 	return
 }

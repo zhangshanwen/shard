@@ -60,7 +60,7 @@ func Update(c *service.AdminTxContext) (r service.Res) {
 		r.NotOwner()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("修改上传文件 id:%v %v ", fileRecord.Id, tools.DiffStruct(p, fileRecord, "json")), model.OperateLogTypeUpdate)
+	diff := tools.DiffStruct(p, fileRecord, "json")
 	fileRecord.FileType = p.FileType
 	fileRecord.Name = p.FileName
 	fileRecord.FileId = file.Id
@@ -68,5 +68,6 @@ func Update(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改上传文件 id:%v %v ", fileRecord.Id, diff))
 	return
 }

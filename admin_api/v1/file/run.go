@@ -37,6 +37,6 @@ func Run(c *service.AdminTxContext) (r service.Res) {
 		r.SystemError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("执行文件 id:%v name:%v file_type%v ,结果 %v ", f.Id, f.Name, f.FileType, string(out)), model.OperateLogTypeSelect)
+	c.SaveLogAdd(tx, fmt.Sprintf("执行文件 id:%v name:%v file_type%v ,结果 %v ", f.Id, f.Name, f.FileType, string(out)))
 	return
 }

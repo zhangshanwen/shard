@@ -35,7 +35,7 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		r.NotFound()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("修改主机 id:%v %v ", m.Id, tools.DiffStruct(p, m, "json")), model.OperateLogTypeUpdate)
+	diff := tools.DiffStruct(p, m, "json")
 	if r.Err = copier.Copy(&m, &p); r.Err != nil {
 		r.CopierError()
 		return
@@ -44,5 +44,6 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改主机 id:%v %v ", m.Id, diff))
 	return
 }

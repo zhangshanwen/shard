@@ -36,6 +36,6 @@ func Detail(c *service.AdminTxContext) (r service.Res) {
 	if fileRecord.File != nil {
 		resp.Code, _ = tools.FileToBase64(fileRecord.File.Hash, fileRecord.File.Path)
 	}
-	c.SaveLog(tx, fmt.Sprintf("查看文件详情 id:%v name:%v file_type%v", resp.Id, resp.Name, resp.FileType), model.OperateLogTypeSelect)
+	c.SaveLogSelect(tx, fmt.Sprintf("查看文件详情 id:%v name:%v file_type%v", resp.Id, resp.Name, resp.FileType))
 	return
 }

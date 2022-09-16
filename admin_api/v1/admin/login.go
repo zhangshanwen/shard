@@ -69,7 +69,7 @@ func Login(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, "登陆后台系统", model.OperateLogTypeSelect)
+	c.SaveLogSelect(tx, "登陆后台系统")
 	return
 }
 

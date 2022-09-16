@@ -61,7 +61,7 @@ func BalanceAdjust(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("修改用户(id:%v,username:%v)余额 %v ,修改后余额 %v",
-		u.Id, u.Username, p.Amount, u.Wallet.Balance), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改用户(id:%v,username:%v)余额 %v ,修改后余额 %v",
+		u.Id, u.Username, p.Amount, u.Wallet.Balance))
 	return
 }

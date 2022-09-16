@@ -35,7 +35,7 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		r.NotFound()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("编辑用户 id:%v %v ", m.Id, tools.DiffStruct(p, m, "json")), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("编辑用户 id:%v %v ", m.Id, tools.DiffStruct(p, m, "json")))
 	if r.Err = copier.Copy(&m, &p); r.Err != nil {
 		r.CopierError()
 		return

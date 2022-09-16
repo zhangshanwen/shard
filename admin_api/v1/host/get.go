@@ -37,6 +37,6 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("查看主机列表"), model.OperateLogTypeSelect)
+	c.SaveLogSelect(tx, fmt.Sprintf("查看主机列表"))
 	return
 }

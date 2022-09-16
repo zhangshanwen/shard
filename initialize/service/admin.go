@@ -30,7 +30,20 @@ func (c *AdminContext) Rebind(obj interface{}) (err error) {
 	return
 }
 
-func (c *AdminContext) SaveLog(tx *gorm.DB, log string, operateLogType model.OperateLogType) {
+func (c *AdminContext) SaveLogSelect(tx *gorm.DB, log string) {
+	c.saveLog(tx, log, model.OperateLogTypeSelect)
+}
+func (c *AdminContext) SaveLogAdd(tx *gorm.DB, log string) {
+	c.saveLog(tx, log, model.OperateLogTypeAdd)
+}
+func (c *AdminContext) SaveLogDel(tx *gorm.DB, log string) {
+	c.saveLog(tx, log, model.OperateLogTypeDel)
+}
+func (c *AdminContext) SaveLogUpdate(tx *gorm.DB, log string) {
+	c.saveLog(tx, log, model.OperateLogTypeUpdate)
+}
+
+func (c *AdminContext) saveLog(tx *gorm.DB, log string, operateLogType model.OperateLogType) {
 	var err error
 	ol := model.OperateLog{
 		OperateId: c.Admin.Id,

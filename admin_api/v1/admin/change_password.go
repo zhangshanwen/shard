@@ -35,6 +35,6 @@ func ChangePassword(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	resp.Password = p.Password
-	c.SaveLog(tx, fmt.Sprintf("修改密码%v->%v", c.Admin.Password, p.Password), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改密码%v->%v", c.Admin.Password, p.Password))
 	return
 }

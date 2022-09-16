@@ -43,6 +43,6 @@ func Create(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("创建角色 id:%v name:%v", m.Id, m.Name), model.OperateLogTypeAdd)
+	c.SaveLogAdd(tx, fmt.Sprintf("创建角色 id:%v name:%v", m.Id, m.Name))
 	return
 }

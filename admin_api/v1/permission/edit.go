@@ -52,6 +52,6 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("修改权限 id:%v name:%v", m.Id, m.Name), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改权限 id:%v name:%v", m.Id, m.Name))
 	return
 }

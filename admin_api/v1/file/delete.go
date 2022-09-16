@@ -27,6 +27,6 @@ func Delete(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("删除文件 id:%v name:%v file_type%v", m.Id, m.Name, m.FileType), model.OperateLogTypeDel)
+	c.SaveLogDel(tx, fmt.Sprintf("删除文件 id:%v name:%v file_type%v", m.Id, m.Name, m.FileType))
 	return
 }

@@ -54,6 +54,6 @@ func Create(c *service.AdminTxContext) (r service.Res) {
 		r.CopierError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("创建用户 id:%v username:%v", m.Id, m.Username), model.OperateLogTypeAdd)
+	c.SaveLogAdd(tx, fmt.Sprintf("创建用户 id:%v username:%v", m.Id, m.Username))
 	return
 }

@@ -29,6 +29,6 @@ func Post(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("创建主机 id:%v name:%v connect_type%v", m.Id, m.Name, m.ConnectType), model.OperateLogTypeAdd)
+	c.SaveLogAdd(tx, fmt.Sprintf("创建主机 id:%v name:%v connect_type%v", m.Id, m.Name, m.ConnectType))
 	return
 }

@@ -39,6 +39,6 @@ func ResetPassword(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	resp.Password = conf.C.ResetPassword
-	c.SaveLog(tx, fmt.Sprintf("重置用户(id:%v username:%v) 密码 ->%v", m.Id, m.Username, conf.C.ResetPassword), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("重置用户(id:%v username:%v) 密码 ->%v", m.Id, m.Username, conf.C.ResetPassword))
 	return
 }

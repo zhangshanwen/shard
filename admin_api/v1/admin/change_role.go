@@ -47,6 +47,6 @@ func ChangeRole(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 
-	c.SaveLog(tx, fmt.Sprintf("修改管理员 %v,角色%v->%v", m.Username, c.Admin.Role.Name, role.Name), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("修改管理员 %v,角色%v->%v", m.Username, c.Admin.Role.Name, role.Name))
 	return
 }

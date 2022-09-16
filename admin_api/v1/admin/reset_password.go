@@ -38,8 +38,8 @@ func ResetPassword(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLog(tx, fmt.Sprintf("重置管理员id:%v,username:%v 密码 ->%v", m.Id,
-		m.Username, conf.C.ResetPassword), model.OperateLogTypeUpdate)
+	c.SaveLogUpdate(tx, fmt.Sprintf("重置管理员id:%v,username:%v 密码 ->%v", m.Id,
+		m.Username, conf.C.ResetPassword))
 
 	return
 }
