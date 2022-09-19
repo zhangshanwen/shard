@@ -114,7 +114,7 @@ func verifyPermission(c *service.AdminContext) (err error) {
 		return
 	}
 	if !val {
-		return common.NoPermission
+		return common.NoPermissionErr
 	}
 	return
 }

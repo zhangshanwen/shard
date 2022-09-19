@@ -47,10 +47,10 @@ func (t *Task) Verify() (err error) {
 
 	now := time.Now().Unix()
 	if t.ExpiryTime+60*60*24*1 <= now {
-		return common.ExpiryTimeShouldNotBeLessThanOneDay
+		return common.ExpiryTimeShouldNotBeLessThanOneDayErr
 	}
 	if now >= t.ExpiryTime {
-		return common.ExpiryTimeShouldNotBeLessThanCurrentTime
+		return common.ExpiryTimeShouldNotBeLessThanCurrentTimeErr
 	}
 	if now >= t.EffectTime {
 		t.Status = StatusRunning

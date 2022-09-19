@@ -249,7 +249,7 @@ func (t *Task) Stop(id int64, tType taskType) (err error) {
 		}
 	}
 	logrus.Errorf("停止任务id:%v,taskType:%v", id, tType)
-	return common.ErrorId
+	return common.IdErr
 }
 func (t *Task) StopAll(id int64) {
 	t.StopExpire(id)
@@ -299,6 +299,6 @@ func (t *Task) Run(p model.Task) (err error) {
 			return
 		}
 	}
-	return common.TaskRunFailed
+	return common.TaskRunErr
 
 }

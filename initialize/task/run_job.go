@@ -97,7 +97,7 @@ func (t *RunJob) Run() {
 			return
 		}
 		if resp.StatusCode>>2 != http.StatusOK>>2 {
-			err = common.RequestFailed
+			err = common.RequestErr
 			return
 		}
 	}
