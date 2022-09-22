@@ -11,6 +11,7 @@ type (
 		Id          int64  `json:"id"`
 		CreatedTime int64  `json:"created_time"`
 		Log         string `json:"log"`
+		Module      string `json:"module"`
 		Type        uint8  `json:"type"`
 		Admin       *Admin
 	}
@@ -30,6 +31,7 @@ func (p *Log) MarshalJSON() ([]byte, error) {
 		CreatedTime int64  `json:"created_time"`
 		Log         string `json:"log"`
 		RoleName    string `json:"role_name"`
+		Module      string `json:"module"`
 		Type        uint8  `json:"type"`
 		Username    string `json:"username"`
 	}{
@@ -38,6 +40,7 @@ func (p *Log) MarshalJSON() ([]byte, error) {
 		Log:         p.Log,
 		RoleName:    roleName,
 		Type:        p.Type,
+		Module:      p.Module,
 		Username:    username,
 	}
 	return json.Marshal(&temp)

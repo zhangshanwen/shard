@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-
 	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/initialize/service"
@@ -52,6 +51,6 @@ func Create(c *service.AdminTxContext) (r service.Res) {
 		r.CopierError()
 		return
 	}
-	c.SaveLogAdd(tx, fmt.Sprintf("创建管理员 %v", m.Username))
+	c.SaveLogAdd(tx, module, fmt.Sprintf("create %v", m.Id))
 	return
 }

@@ -69,4 +69,5 @@ const (
 	Run         = "run"
 	Room        = "room"
 	Watch       = "watch"
+	Empty       = "empty"
 )

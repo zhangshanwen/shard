@@ -23,6 +23,6 @@ func Delete(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogDel(tx, fmt.Sprintf("删除主机 id:%v name:%v connect_type%v", m.Id, m.Name, m.ConnectType))
+	c.SaveLogDel(tx, module, fmt.Sprintf("id:%v name:%v connect_type%v", m.Id, m.Name, m.ConnectType))
 	return
 }

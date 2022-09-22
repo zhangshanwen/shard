@@ -68,6 +68,6 @@ func Update(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogUpdate(tx, fmt.Sprintf("修改上传文件 id:%v %v ", fileRecord.Id, diff))
+	c.SaveLogUpdate(tx, module, fmt.Sprintf("upload id:%v %v ", fileRecord.Id, diff))
 	return
 }

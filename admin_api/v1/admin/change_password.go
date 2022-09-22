@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/inter/response"
@@ -19,6 +18,7 @@ func ChangePassword(c *service.AdminTxContext) (r service.Res) {
 		tx   = c.Tx
 		resp = response.PasswordResponse{}
 	)
+	resp.Password = p.Password
 	defer func() {
 		if r.Err == nil {
 			r.Data = resp
@@ -34,7 +34,6 @@ func ChangePassword(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	resp.Password = p.Password
-	c.SaveLogUpdate(tx, fmt.Sprintf("修改密码%v->%v", c.Admin.Password, p.Password))
+	c.SaveLogUpdate(tx, module, fmt.Sprintf("change password:%v", p.Password))
 	return
 }

@@ -23,6 +23,6 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogSelect(tx, fmt.Sprintf("获取路由列表"))
+	c.SaveLogSelect(tx, module, fmt.Sprintf("cat list"))
 	return
 }

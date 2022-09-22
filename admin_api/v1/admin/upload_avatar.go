@@ -51,6 +51,6 @@ func UploadAvatar(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogUpdate(tx, fmt.Sprintf("上传头像"))
+	c.SaveLogUpdate(tx, module, "avatar")
 	return
 }

@@ -54,7 +54,7 @@ func Upload(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogAdd(tx, fmt.Sprintf("上传文件 id:%v name:%v file_type%v", fileRecord.Id, fileRecord.Name, fileRecord.FileType))
+	c.SaveLogAdd(tx, module, fmt.Sprintf("upload id:%v name:%v file_type%v", fileRecord.Id, fileRecord.Name, fileRecord.FileType))
 	return
 }
 

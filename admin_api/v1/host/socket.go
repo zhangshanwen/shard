@@ -63,7 +63,7 @@ func Socket(c *service.AdminContext) {
 		return
 	}
 	_ = tx.Model(&m).Where("id=? and status=?", host.Id, 0).Update("status", 1)
-	c.SaveLogAdd(tx, fmt.Sprintf("创建终端(%v) id:%v name:%v", p.Id, host.Id, host.Name))
+	c.SaveLogAdd(tx, module, fmt.Sprintf("terminal (%v) id:%v name:%v", p.Id, host.Id, host.Name))
 	ss.Run(conn)
 	logrus.Info("任务执行结束,断开连接")
 }

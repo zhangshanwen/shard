@@ -39,6 +39,6 @@ func Create(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogAdd(tx, fmt.Sprintf("创建权限 id:%v name:%v", m.Id, m.Name))
+	c.SaveLogAdd(tx, module, fmt.Sprintf("id:%v name:%v", m.Id, m.Name))
 	return
 }

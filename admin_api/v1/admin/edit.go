@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-
 	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/initialize/service"
@@ -44,6 +43,6 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogUpdate(tx, fmt.Sprintf("编辑管理员 id:%v %v ", m.Id, diff))
+	c.SaveLogUpdate(tx, module, fmt.Sprintf("id:%v;diff:%v", m.Id, diff))
 	return
 }

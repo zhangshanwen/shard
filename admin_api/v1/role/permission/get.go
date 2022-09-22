@@ -42,6 +42,6 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		r.CopierError()
 		return
 	}
-	c.SaveLogSelect(tx, fmt.Sprintf("获取角色(%v)权限", pId.Id))
+	c.SaveLogSelect(tx, module, fmt.Sprintf("%v", pId.Id))
 	return
 }

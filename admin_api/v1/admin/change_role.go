@@ -41,12 +41,12 @@ func ChangeRole(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
+	diff := fmt.Sprintf("change role-%v>%v", m.RoleId, p.RoleId)
 	m.RoleId = p.RoleId
 	if r.Err = tx.Model(&m).Updates(&m).Error; r.Err != nil {
 		r.DBError()
 		return
 	}
-
-	c.SaveLogUpdate(tx, fmt.Sprintf("修改管理员 %v,角色%v->%v", m.Username, c.Admin.Role.Name, role.Name))
+	c.SaveLogUpdate(tx, module, diff)
 	return
 }

@@ -2,7 +2,6 @@ package admin
 
 import (
 	"fmt"
-
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/model"
@@ -28,7 +27,6 @@ func Delete(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogDel(tx, fmt.Sprintf("删除管理员 id:%v username:%v", m.Id,
-		m.Username))
+	c.SaveLogDel(tx, module, fmt.Sprintf("%v", m.Id))
 	return
 }

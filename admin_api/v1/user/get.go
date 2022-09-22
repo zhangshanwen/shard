@@ -44,6 +44,6 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		r.CopierError()
 		return
 	}
-	c.SaveLogSelect(tx, "查询用户列表")
+	c.SaveLogSelect(tx, module, "cat list")
 	return
 }

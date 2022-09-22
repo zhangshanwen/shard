@@ -36,6 +36,6 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		r.DBError()
 		return
 	}
-	c.SaveLogSelect(tx, fmt.Sprintf("查看文件列表"))
+	c.SaveLogSelect(tx, module, fmt.Sprintf("cat list"))
 	return
 }
