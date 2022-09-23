@@ -189,3 +189,6 @@ func (r *Res) BalanceLess() {
 	r.StatusCode = http.StatusBadRequest
 	r.Msg = common.BalanceLess
 }
+func (r *Res) Living() {
+
+}

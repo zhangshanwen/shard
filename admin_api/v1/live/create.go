@@ -2,6 +2,7 @@ package live
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
@@ -17,8 +18,7 @@ func Post(c *service.AdminTxContext) (r service.Res) {
 	}
 	key := fmt.Sprintf("%v_%v", c.Admin.Id, p.Name)
 	hash := tools.Hash(key)
-	var liveUrl string
-
-	r.Err = db.R.Set(c, hash, liveUrl, 0).Err()
+	r.Err = db.R.Set(c, hash, p.Name, 10*time.Minute).Err()
+	r.Data = hash
 	return
 }

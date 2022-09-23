@@ -1,29 +1,53 @@
 package live
 
 import (
-	"github.com/zhangshanwen/shard/code"
-	"github.com/zhangshanwen/shard/initialize/db"
-	"github.com/zhangshanwen/shard/initialize/service"
+	"github.com/zhangshanwen/shard/initialize/app"
 	"github.com/zhangshanwen/shard/inter/param"
-	"github.com/zhangshanwen/shard/inter/response"
+	"github.com/zhangshanwen/shard/live/protocol/flv"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 )
 
-//Get 获取直播推送地址并加入房间
-func Get(c *service.AdminTxContext) (r service.Res) {
-	p := param.LiveRoom{}
-	if r.Err = c.Rebind(&p); r.Err != nil {
-		r.ResCode = code.ParamsError
-		return
-	}
-	var (
-		resp response.LiveResponse
-	)
-
+func Get(c *gin.Context) {
 	defer func() {
-		if r.Err == nil {
-			r.Data = resp
+		if r := recover(); r != nil {
+			log.Error("http flv handleConn panic: ", r)
 		}
 	}()
-	resp.Url = db.R.Get(c, p.Hash).String()
-	return
+	var err error
+	p := param.UriStrId{}
+	if err = c.BindUri(&p); err != nil {
+		c.String(http.StatusBadRequest, "invalid params")
+		return
+	}
+	if pos := strings.LastIndex(p.Id, "."); pos < 0 || p.Id[pos:] != ".flv" {
+		c.String(http.StatusBadRequest, "invalid path")
+		return
+	}
+	// 判断视屏流是否发布,如果没有发布,直接返回404
+	msgs := flv.GetStreams(app.S)
+	path := strings.Replace(p.Id, ".flv", "", -1)
+	if msgs == nil || len(msgs.Publishers) == 0 {
+		c.String(http.StatusNotFound, "invalid path")
+		return
+	} else {
+		include := false
+		for _, item := range msgs.Publishers {
+			if item.Key == "live/"+path {
+				include = true
+				break
+			}
+		}
+		if include == false {
+			c.String(http.StatusNotFound, "invalid path")
+			return
+		}
+	}
+	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+	writer := flv.NewFLVWriter("live", path, c.Request.URL.String(), c.Writer)
+	app.S.HandleWriter(writer)
+	writer.Wait()
 }

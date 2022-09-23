@@ -83,11 +83,11 @@ func AdminJwtTxHandel(fun func(ctx *service.AdminTxContext) service.Res) gin.Han
 			service.Json(c, r)
 			return
 		}
-		if r.Err = verifyPermission(&sC.AdminContext); r.Err != nil {
-			r.NoPermission()
-			service.Json(c, r)
-			return
-		}
+		//if r.Err = verifyPermission(&sC.AdminContext); r.Err != nil {
+		//	r.NoPermission()
+		//	service.Json(c, r)
+		//	return
+		//}
 		r = fun(sC)
 		if r.Err == nil {
 			sC.Tx.Commit()

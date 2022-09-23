@@ -7,4 +7,7 @@ type (
 	UriAuthorization struct {
 		Authorization string `uri:"authorization"`
 	}
+	UriStrId struct {
+		Id string `uri:"id" binding:"required"`
+	}
 )
