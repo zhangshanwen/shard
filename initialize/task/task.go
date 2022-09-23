@@ -3,7 +3,6 @@ package task
 import (
 	"errors"
 	"fmt"
-	"github.com/zhangshanwen/shard/common"
 	"sync"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
+	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/model"
 )
