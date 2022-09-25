@@ -1,14 +1,16 @@
 package live
 
 import (
-	"github.com/zhangshanwen/shard/initialize/app"
-	"github.com/zhangshanwen/shard/inter/param"
-	"github.com/zhangshanwen/shard/live/protocol/flv"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+
+	"github.com/zhangshanwen/shard/common"
+	"github.com/zhangshanwen/shard/initialize/app"
+	"github.com/zhangshanwen/shard/inter/param"
+	"github.com/zhangshanwen/shard/live/protocol/flv"
 )
 
 func Get(c *gin.Context) {
@@ -36,7 +38,7 @@ func Get(c *gin.Context) {
 	} else {
 		include := false
 		for _, item := range msgs.Publishers {
-			if item.Key == "live/"+path {
+			if item.Key == common.LiveAppName+"/"+path {
 				include = true
 				break
 			}
@@ -47,7 +49,7 @@ func Get(c *gin.Context) {
 		}
 	}
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-	writer := flv.NewFLVWriter("live", path, c.Request.URL.String(), c.Writer)
+	writer := flv.NewFLVWriter(common.Live, path, c.Request.URL.String(), c.Writer)
 	app.S.HandleWriter(writer)
 	writer.Wait()
 }

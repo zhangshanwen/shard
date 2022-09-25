@@ -4,3 +4,4 @@ bin
 env/*.yaml
 files
 go.sum
+flv

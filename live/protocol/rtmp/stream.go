@@ -2,6 +2,7 @@ package rtmp
 
 import (
 	"fmt"
+	"github.com/zhangshanwen/shard/initialize/conf"
 	"strings"
 	"sync"
 	"time"
@@ -168,7 +169,7 @@ func (s *Stream) StartStaticPush() {
 
 	log.Debugf("StartStaticPush: current streamname=%s， appname=%s", streamname, appname)
 
-	pushurl := ":7123" + "/" + streamname
+	pushurl := conf.C.Rtmp + "/" + streamname
 	log.Debugf("StartStaticPush: static pushurl=%s", pushurl)
 
 	staticpushObj := rtmprelay.GetAndCreateStaticPushObject(pushurl)
@@ -202,7 +203,7 @@ func (s *Stream) StopStaticPush() {
 
 	log.Debugf("StopStaticPush: current streamname=%s， appname=%s", streamname, appname)
 
-	pushurl := ":7123" + "/" + streamname
+	pushurl := conf.C.Rtmp + "/" + streamname
 	log.Debugf("StopStaticPush: static pushurl=%s", pushurl)
 
 	staticpushObj, err := rtmprelay.GetStaticPushObject(pushurl)
@@ -233,7 +234,7 @@ func (s *Stream) IsSendStaticPush() bool {
 	}
 
 	streamname := key[index+1:]
-	pushurl := ":7123" + "/" + streamname
+	pushurl := conf.C.Rtmp + "/" + streamname
 	//log.Debugf("SendStaticPush: static pushurl=%s", pushurl)
 
 	staticpushObj, err := rtmprelay.GetStaticPushObject(pushurl)

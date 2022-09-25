@@ -5,6 +5,8 @@ const (
 	// headers
 	Authorization = "Authorization" // 认证header token
 
+	LiveAppName = "live"
+
 	//schema
 	HttpPrefix  = "http://"
 	HttpsPrefix = "https://"

@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/zhangshanwen/shard/initialize/conf"
 	"net"
 	"time"
 
@@ -18,7 +19,7 @@ func initStream() {
 }
 
 func startRtmp(stream *rtmp.RtmpStream) {
-	rtmpAddr := ":7123"
+	rtmpAddr := conf.C.Rtmp
 
 	rtmpListen, err := net.Listen("tcp", rtmpAddr)
 	if err != nil {
