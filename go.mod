@@ -17,7 +17,7 @@ require (
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/qiniu/go-sdk/v7 v7.9.8
 	github.com/robfig/cron/v3 v3.0.0
-	github.com/satori/go.uuid v1.2.0 // indirect
+	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cast v1.4.1 // indirect
 	github.com/spf13/viper v1.8.1
