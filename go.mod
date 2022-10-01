@@ -7,9 +7,7 @@ require (
 	github.com/deckarep/golang-set v1.7.1
 	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gin-gonic/gin v1.7.2
-	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
-	github.com/go-playground/validator/v10 v10.11.0
 	github.com/go-redis/redis/v8 v8.11.0
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/gorilla/websocket v1.5.0

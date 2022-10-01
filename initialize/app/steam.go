@@ -1,12 +1,12 @@
 package app
 
 import (
-	"github.com/zhangshanwen/shard/initialize/conf"
 	"net"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/zhangshanwen/shard/initialize/conf"
 	"github.com/zhangshanwen/shard/live/protocol/rtmp"
 )
 
@@ -36,7 +36,7 @@ func startRtmp(stream *rtmp.RtmpStream) {
 		}
 	}()
 	log.Info("RTMP Listen On ", rtmpAddr)
-	rtmpServer.Serve(rtmpListen)
+	_ = rtmpServer.Serve(rtmpListen)
 }
 
 func InitRtmp() {

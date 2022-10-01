@@ -26,6 +26,7 @@ var (
 	BalanceLess      = "BalanceLess"
 	NoPermission     = "NoPermission"
 	TaskRunFailed    = "TaskRunFailed"
+	Living           = "Living"
 )
 
 var (

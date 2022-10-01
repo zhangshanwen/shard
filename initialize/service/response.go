@@ -190,5 +190,7 @@ func (r *Res) BalanceLess() {
 	r.Msg = common.BalanceLess
 }
 func (r *Res) Living() {
-
+	r.ResCode = code.Living
+	r.StatusCode = http.StatusBadRequest
+	r.Msg = common.Living
 }

@@ -38,6 +38,7 @@ const (
 	TaskRunFailed     = 205004 // 任务执行失败
 	TaskIsRunning     = 205005 // 任务正在执行
 	TaskIsNotRunning  = 205006 // 任务未运行
+	Living            = 206001 // 正在直播
 
 	PermissionIsExisted = 700001 // 权限已经存在
 	RouterISNotExisted  = 700101 // 路由不存在

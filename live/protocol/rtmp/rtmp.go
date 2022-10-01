@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/zhangshanwen/shard/initialize/db"
 	"net"
 	"net/url"
 	"reflect"
 	"strings"
 	"time"
 
+	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/live/av"
 	"github.com/zhangshanwen/shard/live/container/flv"
 	"github.com/zhangshanwen/shard/live/protocol/rtmp/core"
@@ -20,51 +20,14 @@ import (
 )
 
 const (
-	maxQueueNum           = 1024
-	SAVE_STATICS_INTERVAL = 5000
+	maxQueueNum         = 1024
+	SaveStaticsInterval = 5000
 )
 
 var (
 	readTimeout  = 3
 	writeTimeout = 3
 )
-
-type Client struct {
-	handler av.Handler
-	getter  av.GetWriter
-}
-
-func NewRtmpClient(h av.Handler, getter av.GetWriter) *Client {
-	return &Client{
-		handler: h,
-		getter:  getter,
-	}
-}
-
-func (c *Client) Dial(url string, method string) error {
-	connClient := core.NewConnClient()
-	if err := connClient.Start(url, method); err != nil {
-		return err
-	}
-	if method == av.PUBLISH {
-		writer := NewVirWriter(connClient)
-		log.Debugf("client Dial call NewVirWriter url=%s, method=%s", url, method)
-		c.handler.HandleWriter(writer)
-	} else if method == av.PLAY {
-		reader := NewVirReader(connClient)
-		log.Debugf("client Dial call NewVirReader url=%s, method=%s", url, method)
-		c.handler.HandleReader(reader)
-		if c.getter != nil {
-			writer := c.getter.GetWriter(reader.Info())
-			c.handler.HandleWriter(writer)
-		}
-	}
-	return nil
-}
-
-func (c *Client) GetHandle() av.Handler {
-	return c.handler
-}
 
 type Server struct {
 	handler av.Handler
@@ -92,7 +55,7 @@ func (s *Server) Serve(listener net.Listener) (err error) {
 			return
 		}
 		conn := core.NewConn(netconn, 4*1024)
-		log.Debug("new client, connect remote: ", conn.RemoteAddr().String(),
+		log.Info("new client, connect remote: ", conn.RemoteAddr().String(),
 			"local:", conn.LocalAddr().String())
 		go s.handleConn(conn)
 	}
@@ -100,34 +63,30 @@ func (s *Server) Serve(listener net.Listener) (err error) {
 
 func (s *Server) handleConn(conn *core.Conn) error {
 	if err := conn.HandshakeServer(); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		log.Error("handleConn HandshakeServer err: ", err)
 		return err
 	}
 	connServer := core.NewConnServer(conn)
 
 	if err := connServer.ReadMsg(); err != nil {
-		conn.Close()
+		_ = conn.Close()
 		log.Error("handleConn read msg err: ", err)
 		return err
 	}
 
-	appname, name, _ := connServer.GetInfo()
-	fmt.Println("appname---------", appname)
-	fmt.Println("name---------", name)
-
+	_, name, _ := connServer.GetInfo()
 	log.Debugf("handleConn: IsPublisher=%v", connServer.IsPublisher())
 	if connServer.IsPublisher() {
 		channel := db.R.Get(context.Background(), name).Val()
 		if channel == "" {
 			return errors.New("no channel")
 		}
-		fmt.Println("channel---------", channel)
+		db.R.Expire(context.Background(), name, time.Minute*10)
 		connServer.PublishInfo.Name = channel
 		reader := NewVirReader(connServer)
 		s.handler.HandleReader(reader)
 		log.Debugf("new publisher: %+v", reader.Info())
-		fmt.Println("new publisher:---------", reader.Info())
 
 		if s.getter != nil {
 			writeType := reflect.TypeOf(s.getter)
@@ -135,8 +94,9 @@ func (s *Server) handleConn(conn *core.Conn) error {
 			writer := s.getter.GetWriter(reader.Info())
 			s.handler.HandleWriter(writer)
 		}
-		flvWriter := new(flv.FlvDvr)
-		s.handler.HandleWriter(flvWriter.GetWriter(reader.Info()))
+		// 写入文件
+		//flvWriter := new(flv.FlvDvr)
+		//s.handler.HandleWriter(flvWriter.GetWriter(reader.Info()))
 	} else {
 		writer := NewVirWriter(connServer)
 		log.Debugf("new player: %+v", writer.Info())
@@ -210,7 +170,7 @@ func (v *VirWriter) SaveStatics(streamid uint32, length uint64, isVideoFlag bool
 
 	if v.WriteBWInfo.LastTimestamp == 0 {
 		v.WriteBWInfo.LastTimestamp = nowInMS
-	} else if (nowInMS - v.WriteBWInfo.LastTimestamp) >= SAVE_STATICS_INTERVAL {
+	} else if (nowInMS - v.WriteBWInfo.LastTimestamp) >= SaveStaticsInterval {
 		diffTimestamp := (nowInMS - v.WriteBWInfo.LastTimestamp) / 1000
 
 		v.WriteBWInfo.VideoSpeedInBytesperMS = (v.WriteBWInfo.VideoDatainBytes - v.WriteBWInfo.LastVideoDatainBytes) * 8 / uint64(diffTimestamp) / 1000
@@ -375,7 +335,7 @@ func (v *VirReader) SaveStatics(streamid uint32, length uint64, isVideoFlag bool
 
 	if v.ReadBWInfo.LastTimestamp == 0 {
 		v.ReadBWInfo.LastTimestamp = nowInMS
-	} else if (nowInMS - v.ReadBWInfo.LastTimestamp) >= SAVE_STATICS_INTERVAL {
+	} else if (nowInMS - v.ReadBWInfo.LastTimestamp) >= SaveStaticsInterval {
 		diffTimestamp := (nowInMS - v.ReadBWInfo.LastTimestamp) / 1000
 
 		//log.Printf("now=%d, last=%d, diff=%d", nowInMS, v.ReadBWInfo.LastTimestamp, diffTimestamp)
@@ -424,13 +384,12 @@ func (v *VirReader) Read(p *av.Packet) (err error) {
 
 func (v *VirReader) Info() (ret av.Info) {
 	ret.UID = v.Uid
-	a, b, URL := v.conn.GetInfo()
+	_, _, URL := v.conn.GetInfo()
 	ret.URL = URL
 	_url, err := url.Parse(URL)
 	if err != nil {
 		log.Warning(err)
 	}
-	fmt.Println("a=", a, "b=", b, "URL=", URL)
 	ret.Key = strings.TrimLeft(_url.Path, "/")
 	return
 }

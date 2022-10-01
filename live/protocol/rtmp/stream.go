@@ -2,16 +2,16 @@ package rtmp
 
 import (
 	"fmt"
-	"github.com/zhangshanwen/shard/initialize/conf"
 	"strings"
 	"sync"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
+	"github.com/zhangshanwen/shard/initialize/conf"
 	"github.com/zhangshanwen/shard/live/av"
 	"github.com/zhangshanwen/shard/live/protocol/rtmp/cache"
 	"github.com/zhangshanwen/shard/live/protocol/rtmp/rtmprelay"
-
-	log "github.com/sirupsen/logrus"
 )
 
 var (

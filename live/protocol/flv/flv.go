@@ -15,12 +15,12 @@ type streams struct {
 }
 
 func GetStreams(s *rtmp.RtmpStream) *streams {
-	msgs := new(streams)
+	messages := new(streams)
 	s.GetStreams().Range(func(key, val interface{}) bool {
-		if s, ok := val.(*rtmp.Stream); ok {
-			if s.GetReader() != nil {
-				msg := stream{key.(string), s.GetReader().Info().UID}
-				msgs.Publishers = append(msgs.Publishers, msg)
+		if k, ok := val.(*rtmp.Stream); ok {
+			if k.GetReader() != nil {
+				msg := stream{key.(string), k.GetReader().Info().UID}
+				messages.Publishers = append(messages.Publishers, msg)
 			}
 		}
 		return true
@@ -33,7 +33,7 @@ func GetStreams(s *rtmp.RtmpStream) *streams {
 			if pw, ok := v.(*rtmp.PackWriterCloser); ok {
 				if pw.GetWriter() != nil {
 					msg := stream{key.(string), pw.GetWriter().Info().UID}
-					msgs.Players = append(msgs.Players, msg)
+					messages.Players = append(messages.Players, msg)
 				}
 			}
 			return true
@@ -41,5 +41,5 @@ func GetStreams(s *rtmp.RtmpStream) *streams {
 		return true
 	})
 
-	return msgs
+	return messages
 }

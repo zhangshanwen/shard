@@ -68,6 +68,7 @@ const (
 	Log         = "log"
 	Task        = "task"
 	Stop        = "stop"
+	Start       = "start"
 	Run         = "run"
 	Room        = "room"
 	Watch       = "watch"

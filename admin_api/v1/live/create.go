@@ -1,24 +1,37 @@
 package live
 
 import (
-	"fmt"
-	"time"
+	"gorm.io/gorm"
 
-	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/inter/param"
-	"github.com/zhangshanwen/shard/tools"
+	"github.com/zhangshanwen/shard/model"
 )
 
-func Post(c *service.AdminTxContext) (r service.Res) {
+func Create(c *service.AdminTxContext) (r service.Res) {
 	p := param.CreateLiveRoom{}
 	if r.Err = c.Rebind(&p); r.Err != nil {
 		r.ParamsError()
 		return
 	}
-	key := fmt.Sprintf("%v_%v", c.Admin.Id, p.Name)
-	hash := tools.Hash(key)
-	r.Err = db.R.Set(c, hash, p.Name, 10*time.Minute).Err()
-	r.Data = hash
+	var (
+		m  model.LiveRoom
+		tx = c.Tx
+	)
+	res := tx.First(&m, "`owner_id`=?", c.Admin.Id)
+	if res.Error == nil {
+		r.RoomExisted()
+		return
+	} else if res.Error != gorm.ErrRecordNotFound {
+		r.DBError()
+		return
+	}
+	m.Name = p.Name
+	m.OwnerId = c.Admin.Id
+	m.Status = model.LiveRoomStatusIdle
+	if r.Err = tx.Save(&m).Error; r.Err != nil {
+		r.DBError()
+		return
+	}
 	return
 }

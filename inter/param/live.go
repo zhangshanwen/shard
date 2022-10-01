@@ -5,6 +5,6 @@ type (
 		Name string `json:"name"`
 	}
 	LiveRoom struct {
-		Hash string `json:"hash"`
+		Pagination
 	}
 )
