@@ -40,6 +40,8 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	for _, i := range ms {
+		hashKey := tools.Hash(fmt.Sprintf("%v_%v", i.Owner.Id, i.Name))
+		memeberCount,_ := db.R.Get(c,hashKey).Int()
 		resp.List = append(resp.List, response.LiveRoom{
 			Id:          i.Id,
 			Name:        i.Name,
@@ -49,7 +51,8 @@ func Get(c *service.AdminTxContext) (r service.Res) {
 			UpdatedTime: i.UpdatedTime,
 			StartTime:   i.StartTime,
 			EndTime:     i.EndTime,
-			Hash:        tools.Hash(fmt.Sprintf("%v_%v", i.Owner.Id, i.Name)),
+			Hash:        hashKey,
+			MemeberCount:memeberCount,
 		})
 	}
 	c.SaveLogSelect(tx, module, fmt.Sprintf("cat list"))

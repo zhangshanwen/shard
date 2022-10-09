@@ -9,6 +9,7 @@ import (
 
 	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/app"
+	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/inter/param"
 	"github.com/zhangshanwen/shard/live/protocol/flv"
 )
@@ -29,6 +30,7 @@ func Flv(c *gin.Context) {
 		c.String(http.StatusBadRequest, "invalid path")
 		return
 	}
+
 	// 判断视屏流是否发布,如果没有发布,直接返回404
 	messages := flv.GetStreams(app.S)
 	path := strings.Replace(p.Id, ".flv", "", -1)
@@ -48,6 +50,9 @@ func Flv(c *gin.Context) {
 			return
 		}
 	}
+	// 增加在线人数
+	db.R.Incr(c, p.Id)
+	defer db.R.Decr(c, p.Id)
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 	writer := flv.NewFLVWriter(common.Live, path, c.Request.URL.String(), c.Writer)
 	app.S.HandleWriter(writer)
