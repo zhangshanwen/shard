@@ -2,6 +2,7 @@ package admin
 
 import (
 	"fmt"
+	"sort"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -104,6 +105,9 @@ func rolePermission(tx *gorm.DB, c *service.AdminTxContext, admin *model.Admin, 
 			}
 		}
 	}
+	sort.Slice(parents, func(i, j int) bool {
+		return parents[i].Id < parents[j].Id
+	})
 	if err = copier.Copy(&resp.List, &parents); err != nil {
 		return
 	}

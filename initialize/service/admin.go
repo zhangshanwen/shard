@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/zhangshanwen/shard/tools/wechat"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -17,6 +18,11 @@ type AdminContext struct {
 	*gin.Context
 	Admin model.Admin
 }
+type AdminWechatContext struct {
+	AdminContext
+	Bot *wechat.Bot
+}
+
 type AdminTxContext struct {
 	AdminContext
 	Tx *gorm.DB

@@ -22,4 +22,5 @@ func RegisterBackendV1Router() {
 	v1.InitHost(group)
 	v1.InitOperateLog(group)
 	v1.InitLive(group)
+	v1.InitWechat(group)
 }

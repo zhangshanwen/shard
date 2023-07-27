@@ -3,7 +3,7 @@ package common
 const (
 
 	// headers
-	Authorization = "Authorization" // 认证header token
+	Authorization = "authorization" // 认证header token
 
 	LiveAppName = "live"
 
@@ -43,6 +43,8 @@ const (
 
 	Socket = "socket"
 
+	WechatStorageFileName = "storage"
+
 	// router
 	UriEmpty    = ""
 	UriLogin    = "login"
@@ -65,6 +67,7 @@ const (
 	File        = "file"
 	Host        = "host"
 	Live        = "live"
+	Barrage     = "barrage"
 	Log         = "log"
 	Task        = "task"
 	Stop        = "stop"
@@ -73,4 +76,10 @@ const (
 	Room        = "room"
 	Watch       = "watch"
 	Empty       = "empty"
+	Wechat      = "wechat"
+	Qrcode      = "qrcode"
+	Friends     = "friends"
+	Status      = "status"
+	Rules       = "rules"
+	Default     = "default"
 )

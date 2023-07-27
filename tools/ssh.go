@@ -2,6 +2,7 @@ package tools
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 
 type (
 	SshSocket struct {
+		hostId  int64
 		client  *ssh.Client
 		session *ssh.Session
 		buffer  bytes.Buffer
@@ -22,6 +24,10 @@ type (
 		quit    chan bool
 		speed   int
 	}
+)
+
+var (
+	env sync.Map
 )
 
 const (
@@ -40,10 +46,11 @@ func (s *SshSocket) SetSpeed(speed int) (err error) {
 	}
 	return
 }
-func NewSshSocket(username, password, host string, port int) (ss *SshSocket, err error) {
+func NewSshSocket(username, password, host string, port int, hostId int64) (ss *SshSocket, err error) {
 	ss = &SshSocket{
-		quit:  make(chan bool),
-		speed: defaultSpeed,
+		hostId: hostId,
+		quit:   make(chan bool),
+		speed:  defaultSpeed,
 	}
 	config := &ssh.ClientConfig{
 		User: username,
@@ -98,7 +105,13 @@ func (s *SshSocket) Run(ws *websocket.Conn) {
 		logrus.Error("创建平台", err)
 		return
 	}
-	_ = s.session.Setenv("LANG", "zh_CN.UTF-8")
+	//_ = s.session.Setenv("LANG", "zh_CN.UTF-8")
+	if value, ok := env.Load(s.hostId); ok {
+		for k, v := range value.(map[string]string) {
+			_ = s.session.Setenv(k, v)
+		}
+	}
+
 	if sessionIn, err = s.session.StdinPipe(); err != nil {
 		logrus.Error("生成StdinPipe失败", err)
 		return
@@ -116,6 +129,14 @@ func (s *SshSocket) Run(ws *websocket.Conn) {
 			}
 			if message == nil {
 				continue
+			}
+			type Test struct {
+				Cmd string `json:"cmd"`
+			}
+			t := Test{}
+			if json.Unmarshal(message, &t) == nil {
+				env.Store(s.hostId, map[string]string{"LANG": "zh_CN.UTF-8"})
+				break
 			}
 			if _, err = sessionIn.Write(message); err != nil {
 				logrus.Error("写入ssh消息失败", err)

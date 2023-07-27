@@ -194,3 +194,9 @@ func (r *Res) Living() {
 	r.StatusCode = http.StatusBadRequest
 	r.Msg = common.Living
 }
+
+func (r *Res) LoginWechatFailed() {
+	r.ResCode = code.LoginFailed
+	r.StatusCode = http.StatusBadRequest
+	r.Msg = common.LoginFailed
+}

@@ -57,7 +57,8 @@ func Socket(c *service.AdminContext) {
 	if conn, err = upGrader.Upgrade(c.Writer, c.Request, nil); err != nil {
 		return
 	}
-	if ss, err = tools.NewSshSocket(host.Username, host.Password, host.Host, host.Port); err != nil {
+	defer conn.Close()
+	if ss, err = tools.NewSshSocket(host.Username, host.Password, host.Host, host.Port, host.Id); err != nil {
 		_ = tx.Model(&m).Where("id=? and status=?", host.Id, 1).Update("status", 0)
 		logrus.Errorf("创建ssh连接失败")
 		return
@@ -66,4 +67,5 @@ func Socket(c *service.AdminContext) {
 	c.SaveLogAdd(tx, module, fmt.Sprintf("terminal (%v) id:%v name:%v", p.Id, host.Id, host.Name))
 	ss.Run(conn)
 	logrus.Info("任务执行结束,断开连接")
+
 }

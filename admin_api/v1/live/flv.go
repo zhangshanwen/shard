@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/app"
@@ -17,7 +17,7 @@ import (
 func Flv(c *gin.Context) {
 	defer func() {
 		if r := recover(); r != nil {
-			log.Error("http flv handleConn panic: ", r)
+			logrus.Error("http flv handleConn panic: ", r)
 		}
 	}()
 	var err error

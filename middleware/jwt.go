@@ -57,11 +57,11 @@ func AdminJwtHandel(fun func(ctx *service.AdminContext) service.Res) gin.Handler
 			service.Json(c, r)
 			return
 		}
-		if r.Err = verifyPermission(sC); r.Err != nil {
-			r.NoPermission()
-			service.Json(c, r)
-			return
-		}
+		//if r.Err = verifyPermission(sC); r.Err != nil {
+		//	r.NoPermission()
+		//	service.Json(c, r)
+		//	return
+		//}
 
 		service.Json(c, fun(sC))
 	}

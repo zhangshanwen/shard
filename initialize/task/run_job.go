@@ -61,7 +61,7 @@ func (t *RunJob) Run() {
 		var (
 			ss *tools.SshSocket
 		)
-		if ss, err = tools.NewSshSocket(host.Username, host.Password, host.Host, host.Port); err != nil {
+		if ss, err = tools.NewSshSocket(host.Username, host.Password, host.Host, host.Port, host.Id); err != nil {
 			return
 		}
 		if err = ss.Session(); err != nil {

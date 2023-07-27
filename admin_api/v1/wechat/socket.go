@@ -1,0 +1,56 @@
+package wechat
+
+import (
+	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
+	"github.com/zhangshanwen/shard/initialize/service"
+	"net/http"
+)
+
+// Socket 创建与前端页面的连接
+func Socket(c *service.AdminWechatContext) {
+	var (
+		err     error
+		conn    *websocket.Conn
+		message []byte
+	)
+
+	var upGrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			return true
+		},
+	}
+
+	if conn, err = upGrader.Upgrade(c.Writer, c.Request, nil); err != nil {
+		return
+	}
+	c.Bot.CleanMessages()
+
+	defer func() { _ = conn.Close() }()
+	go func() {
+		for {
+			select {
+			case <-c.Done():
+				logrus.Info("websocket断开连接")
+				break
+			case <-c.Bot.Context().Done():
+				logrus.Info("机器人断开连接")
+				break
+			case m := <-c.Bot.Messages:
+				if err = conn.WriteMessage(websocket.TextMessage, []byte(m)); err != nil {
+					logrus.Errorf("%v写入消息失败:", err)
+					break
+				}
+
+			}
+		}
+	}()
+	for {
+		if _, message, err = conn.ReadMessage(); err != nil {
+			logrus.Errorf("读取消息失败:%v", err)
+			break
+		}
+		c.Bot.ReceiveMessage(message)
+	}
+	return
+}
