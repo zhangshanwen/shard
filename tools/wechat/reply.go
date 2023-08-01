@@ -20,8 +20,8 @@ type (
 		rules          map[string]string // 适配正则
 	}
 	template struct {
-		Desc      string
-		replyFunc replyFunc
+		Description string
+		replyFunc   replyFunc
 	}
 
 	replyFunc func(*openwechat.User, ...interface{}) string
@@ -46,26 +46,20 @@ var (
 		},
 	}
 	DefaultTemplateReply = map[string]template{
-		"当前时间": {
-			Desc: fmt.Sprintf("系统时间,例如:%v", common.TimeFullFormat),
+		"now": {
+			Description: fmt.Sprintf("系统时间,例如:%v", common.TimeFullFormat),
 			replyFunc: func(sender *openwechat.User, i ...interface{}) string {
 				return time.Now().Format(common.TimeFullFormat)
 			},
 		},
-		"星期几": {
-			Desc: fmt.Sprintf("星期几,例如:%v", time.Now().Weekday().String()),
+		"week": {
+			Description: fmt.Sprintf("星期几,例如:%v", time.Now().Weekday().String()),
 			replyFunc: func(sender *openwechat.User, i ...interface{}) string {
 				return time.Now().Weekday().String()
 			},
 		},
-		"周几": {
-			Desc: fmt.Sprintf("星期几,例如:%v", time.Now().Weekday().String()),
-			replyFunc: func(sender *openwechat.User, i ...interface{}) string {
-				return time.Now().Weekday().String()
-			},
-		},
-		"我是谁": {
-			Desc: "微信昵称",
+		"woami": {
+			Description: "微信昵称",
 			replyFunc: func(sender *openwechat.User, i ...interface{}) string {
 				return sender.NickName
 			},

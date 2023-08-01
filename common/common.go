@@ -48,6 +48,7 @@ const (
 	// router
 	UriEmpty    = ""
 	UriLogin    = "login"
+	Logout      = "logout"
 	Routes      = "routes"
 	UriAvatar   = "avatar"
 	Admins      = "admins"
@@ -81,5 +82,5 @@ const (
 	Friends     = "friends"
 	Status      = "status"
 	Rules       = "rules"
-	Default     = "default"
+	Functions   = "functions"
 )

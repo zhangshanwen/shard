@@ -6,14 +6,14 @@ import (
 	"github.com/zhangshanwen/shard/tools/wechat"
 )
 
-// DefaultRules 返回默认返回规则
-func DefaultRules(c *service.AdminContext) (r service.Res) {
+// Functions 返回默认返回规则
+func Functions(c *service.AdminContext) (r service.Res) {
 	var (
 		resp response.DefaultRulesResponse
 	)
-	for name, v := range wechat.DefaultTemplateReply {
+	for functionName, v := range wechat.DefaultTemplateReply {
 		resp.List = append(resp.List, response.DefaultRule{
-			Name: name, Desc: v.Desc,
+			FunctionName: functionName, Description: v.Description,
 		})
 	}
 	r.Data = resp

@@ -118,7 +118,6 @@ func (b *Bot) MessageHandler(msg *openwechat.Message) {
 	}
 }
 func (b *Bot) SendMessage(t messageType, message string) {
-	fmt.Println("------------------")
 	go func() {
 		b.Messages <- fmt.Sprintf("%v:%v", t, message)
 	}()
