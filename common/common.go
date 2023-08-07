@@ -82,5 +82,6 @@ const (
 	Friends     = "friends"
 	Status      = "status"
 	Rules       = "rules"
+	Bots        = "bots"
 	Functions   = "functions"
 )

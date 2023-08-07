@@ -22,4 +22,15 @@ type (
 		List       []Rule     `json:"list"`
 		Pagination Pagination `json:"pagination"`
 	}
+	ReplyBot struct {
+		Id          int64  `json:"id"`
+		Name        string `json:"name"`        // 名称
+		Description string `json:"description"` // 描述
+		CreatedTime int64  `json:"created_time"`
+		UpdatedTime int64  `json:"updated_time"`
+	}
+	ReplyBotResponse struct {
+		List       []ReplyBot `json:"list"`
+		Pagination Pagination `json:"pagination"`
+	}
 )
