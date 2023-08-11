@@ -20,7 +20,7 @@ func InitWechat(Router *gin.RouterGroup) {
 
 		g := r.Group(common.UriLogin)
 		{
-			g.GET(common.Qrcode, jwt(wechat.QrCode)) // 获取微信登录二维码
+			g.GET(common.Qrcode, jwtTx(wechat.QrCode)) // 获取微信登录二维码
 		}
 
 		s := r.Group(common.Socket)

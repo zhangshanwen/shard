@@ -2,10 +2,10 @@ package wechat
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"regexp"
 
 	"github.com/eatmoreapple/openwechat"
+	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/tools"
 )
@@ -36,7 +36,7 @@ func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
 	if sender, err = msg.Sender(); err != nil {
 		return
 	}
-	for k, v := range reply.rules {
+	for k, v := range reply.Rules {
 		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply) {
 			if _, err = msg.ReplyText(v); err != nil {
 				return
@@ -62,9 +62,9 @@ func (b *Bot) AddReply(replies []*Reply) (err error) {
 }
 func (b *Bot) checkReply(sender *openwechat.User, reply *Reply) bool {
 	if sender.IsFriend() {
-		return reply.isAllFriends || b.checkFriendOrGroups(reply.friends, reply.excludeFriends, sender.UserName)
+		return reply.IsAllFriends || b.checkFriendOrGroups(reply.Friends, reply.ExcludeFriends, sender.UserName)
 	} else if sender.IsGroup() {
-		return reply.isAllGroups || b.checkFriendOrGroups(reply.groups, reply.excludeGroups, sender.UserName)
+		return reply.IsAllGroups || b.checkFriendOrGroups(reply.Groups, reply.ExcludeGroups, sender.UserName)
 	}
 	return false
 }
@@ -79,7 +79,7 @@ func (b *Bot) checkFriendOrGroups(includeArray, excludeArray []string, compare s
 	return include && !exclude
 }
 
-func (b *Bot) Friends() (friends openwechat.Friends, err error) {
+func (b *Bot) Friends() (Friends openwechat.Friends, err error) {
 	var (
 		self *openwechat.Self
 	)
@@ -110,13 +110,6 @@ func (b *Bot) LoginCallBack(body openwechat.CheckLoginResponse) {
 	}
 }
 
-func (b *Bot) MessageHandler(msg *openwechat.Message) {
-	if msg.IsText() && msg.StatusNotifyCode == 0 {
-		if f, ok := templateReply[msg.Content]; ok {
-			_, _ = msg.ReplyText(f(msg.Sender()))
-		}
-	}
-}
 func (b *Bot) SendMessage(t messageType, message string) {
 	go func() {
 		b.Messages <- fmt.Sprintf("%v:%v", t, message)

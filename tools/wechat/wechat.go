@@ -51,7 +51,7 @@ func (w *Wechat) Bot(uid int64) (weBot *Bot) {
 	return w.bots[uid]
 }
 
-func (w *Wechat) Qrcode(uid int64) (code string, err error) {
+func (w *Wechat) Qrcode(uid int64, replies []*Reply) (code string, err error) {
 	bot := w.Bot(uid)
 	var getCallback = make(chan bool)
 	bot.UUIDCallback = func(uuid string) {
@@ -66,6 +66,9 @@ func (w *Wechat) Qrcode(uid int64) (code string, err error) {
 		if err = bot.HotLogin(reloadStorage, openwechat.NewRetryLoginOption()); err != nil {
 			logrus.Errorf("登录失败....%v", err)
 			return
+		}
+		if err = bot.AddReply(replies); err != nil {
+			logrus.Warning("添加规则失败", err)
 		}
 		bot.SendMessage(messageLoginType, "success")
 		logrus.Info("登陆完成.......")
