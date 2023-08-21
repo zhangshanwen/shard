@@ -1,12 +1,14 @@
 package wechat
 
 import (
-	"fmt"
+	"errors"
 	"regexp"
+	"strings"
 
 	"github.com/eatmoreapple/openwechat"
 	"github.com/sirupsen/logrus"
 
+	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/tools"
 )
 
@@ -20,9 +22,10 @@ type (
 )
 
 const (
-	messagePingType    messageType = "ping"
-	messageLoginType   messageType = "login"
-	messageMessageType messageType = "message"
+	messagePingType         messageType = "ping"
+	messageLoginType        messageType = "login"
+	messageMessageType      messageType = "message"
+	messageMessageReplyType messageType = "messageReply"
 )
 
 func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
@@ -36,11 +39,13 @@ func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
 	if sender, err = msg.Sender(); err != nil {
 		return
 	}
+	b.SendMessage(messageMessageType, sender.ID(), common.MessageSplitSymbol, msg.Content)
 	for k, v := range reply.Rules {
 		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply) {
 			if _, err = msg.ReplyText(v); err != nil {
 				return
 			}
+			b.SendMessage(messageMessageReplyType, sender.ID(), common.MessageSplitSymbol, msg.Content)
 		}
 	}
 	return
@@ -79,7 +84,7 @@ func (b *Bot) checkFriendOrGroups(includeArray, excludeArray []string, compare s
 	return include && !exclude
 }
 
-func (b *Bot) Friends() (Friends openwechat.Friends, err error) {
+func (b *Bot) Friends() (friends openwechat.Friends, err error) {
 	var (
 		self *openwechat.Self
 	)
@@ -88,6 +93,21 @@ func (b *Bot) Friends() (Friends openwechat.Friends, err error) {
 	}
 	return self.Friends()
 }
+
+func (b *Bot) FindFriend(friendId string) (friend *openwechat.Friend, err error) {
+
+	var friends openwechat.Friends
+	if friends, err = b.Friends(); err != nil {
+		return
+	}
+	for _, f := range friends {
+		if f.ID() == friendId {
+			return f, nil
+		}
+	}
+	return nil, errors.New("NotFoundFriendId")
+}
+
 func (b *Bot) LoginCallBack(body openwechat.CheckLoginResponse) {
 	var (
 		loginCode openwechat.LoginCode
@@ -110,19 +130,49 @@ func (b *Bot) LoginCallBack(body openwechat.CheckLoginResponse) {
 	}
 }
 
-func (b *Bot) SendMessage(t messageType, message string) {
+func (b *Bot) SendMessage(t messageType, message ...string) {
+	message = append([]string{string(t)}, message...)
 	go func() {
-		b.Messages <- fmt.Sprintf("%v:%v", t, message)
+		b.Messages <- strings.Join(message, common.MessageSplitSymbol)
 	}()
 }
 
 func (b *Bot) ReceiveMessage(message []byte) {
-	switch string(message) {
-	case "ping":
+	if len(message) <= 0 {
+		return
+	}
+	var messages = strings.Split(string(message), common.MessageSplitSymbol)
+	if len(messages) <= 1 {
+		// 符合规范消息ping[::]ping
+		return
+	}
+	switch messageType(messages[0]) {
+	case messagePingType:
 		b.SendMessage(messagePingType, "pong")
+	default:
+		b.Chat(messages[1:])
 	}
 }
 
 func (b *Bot) CleanMessages() {
 	b.Messages = make(chan string)
+}
+func (b *Bot) Chat(body []string) {
+	if len(body) <= 1 {
+		//符合聊天消息message[::]friend_id[::]hello world
+		return
+	}
+	var (
+		friendId = body[0]
+		msg      = strings.Join(body[1:], "")
+		err      error
+		friend   *openwechat.Friend
+	)
+	if friend, err = b.FindFriend(friendId); err != nil {
+		logrus.Warning(err)
+		return
+	}
+	if _, err = friend.SendText(msg); err != nil {
+		logrus.Warning(err)
+	}
 }

@@ -61,7 +61,7 @@ func (w *Wechat) Qrcode(uid int64, replies []*Reply) (code string, err error) {
 		bot.SendMessage(messageLoginType, "qrcode")
 	}
 	go func() {
-		reloadStorage := openwechat.NewFileHotReloadStorage(fmt.Sprintf("%v_%v.json", common.WechatStorageFileName, uid))
+		reloadStorage := openwechat.NewFileHotReloadStorage(fmt.Sprintf("%v/%v.json", common.WechatStorageFileName, uid))
 		defer reloadStorage.Close()
 		if err = bot.HotLogin(reloadStorage, openwechat.NewRetryLoginOption()); err != nil {
 			logrus.Errorf("登录失败....%v", err)

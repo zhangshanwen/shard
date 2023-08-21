@@ -1,10 +1,11 @@
 package wechat
 
 import (
+	"strings"
+
 	"github.com/zhangshanwen/shard/initialize/service"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools/wechat"
-	"strings"
 )
 
 func QrCode(c *service.AdminTxContext) (r service.Res) {
