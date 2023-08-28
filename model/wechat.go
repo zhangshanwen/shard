@@ -26,4 +26,17 @@ type (
 		ReplyBotId int64 `json:"reply_bot_id"`
 		RuleId     int64 `json:"rule_id"`
 	}
+	ChatMessage struct {
+		BaseModel
+		SenderId   string `json:"sender_id"`   // 发送者id
+		ReceiverId string `json:"receiver_id"` // 接收者id
+		Msg        string `json:"msg"`         // 消息
+		MsgType    int    `json:"msg_type"`    // 消息类型  文本 表情 图片 录音 视频
+		FileId     int64  `json:"file_id"`     // 文件id
+	}
+	ChatFile struct {
+		BaseModel
+		Uri      string `json:"uri"`       // 文件地址
+		FileType string `json:"file_type"` // 文件类型 图片 录音 视频
+	}
 )

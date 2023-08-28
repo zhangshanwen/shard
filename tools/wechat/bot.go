@@ -3,12 +3,15 @@ package wechat
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/eatmoreapple/openwechat"
 	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/common"
+	"github.com/zhangshanwen/shard/initialize/db"
+	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
 )
 
@@ -16,6 +19,7 @@ type (
 	Bot struct {
 		*openwechat.Bot
 		replies  []*Reply
+		Self     *openwechat.Self
 		Messages chan string
 	}
 	messageType string
@@ -39,13 +43,17 @@ func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
 	if sender, err = msg.Sender(); err != nil {
 		return
 	}
+
+	b.saveMessage(msg.Content, sender.ID(), b.Self.ID(), msg.CreateTime)
 	b.SendMessage(messageMessageType, sender.ID(), common.MessageSplitSymbol, msg.Content)
 	for k, v := range reply.Rules {
 		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply) {
 			if _, err = msg.ReplyText(v); err != nil {
 				return
 			}
+			b.saveMessage(msg.Content, b.Self.ID(), sender.ID(), msg.CreateTime)
 			b.SendMessage(messageMessageReplyType, sender.ID(), common.MessageSplitSymbol, msg.Content)
+
 		}
 	}
 	return
@@ -130,6 +138,22 @@ func (b *Bot) LoginCallBack(body openwechat.CheckLoginResponse) {
 	}
 }
 
+// 保存历史信息
+func (b *Bot) saveMessage(message, senderId, receiverId string, createdTime int64) {
+	go func() {
+		cm := model.ChatMessage{
+			Msg:        message,
+			SenderId:   senderId,
+			ReceiverId: receiverId,
+		}
+		if createdTime != 0 {
+			cm.CreatedTime = createdTime
+		}
+		db.G.Save(&cm)
+	}()
+}
+
+// SendMessage 向客户端发送消息数据
 func (b *Bot) SendMessage(t messageType, message ...string) {
 	message = append([]string{string(t)}, message...)
 	go func() {
@@ -159,14 +183,15 @@ func (b *Bot) CleanMessages() {
 }
 func (b *Bot) Chat(body []string) {
 	if len(body) <= 1 {
-		//符合聊天消息message[::]friend_id[::]hello world
+		//符合聊天消息   message[::]friend_id[::]消息时间戳[::]hello world
 		return
 	}
 	var (
-		friendId = body[0]
-		msg      = strings.Join(body[1:], "")
-		err      error
-		friend   *openwechat.Friend
+		friendId    = body[0]
+		createdTime int64
+		msg         = strings.Join(body[2:], "")
+		err         error
+		friend      *openwechat.Friend
 	)
 	if friend, err = b.FindFriend(friendId); err != nil {
 		logrus.Warning(err)
@@ -175,4 +200,8 @@ func (b *Bot) Chat(body []string) {
 	if _, err = friend.SendText(msg); err != nil {
 		logrus.Warning(err)
 	}
+	if createdTime, err = strconv.ParseInt(body[1], 10, 64); err != nil {
+		return
+	}
+	b.saveMessage(msg, friendId, b.Self.ID(), createdTime)
 }

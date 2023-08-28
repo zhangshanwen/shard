@@ -44,6 +44,7 @@ func (w *Wechat) Bot(uid int64) (weBot *Bot) {
 		w.bots[uid] = &Bot{
 			bot,
 			[]*Reply{},
+			nil,
 			make(chan string),
 		}
 	}
@@ -79,6 +80,11 @@ func (w *Wechat) Qrcode(uid int64, replies []*Reply) (code string, err error) {
 
 func (w *Wechat) Login(uid int64) (err error) {
 	bot := w.Bot(uid)
+	defer func() {
+		if bot.Self, err = bot.GetCurrentUser(); err != nil {
+			return
+		}
+	}()
 	if bot.Alive() {
 		// 无需重新登陆
 		return
@@ -97,21 +103,11 @@ func (w *Wechat) GetCurrentUser(uid int64) (self *openwechat.Self, err error) {
 }
 
 func (w *Wechat) Friends(uid int64) (friends openwechat.Friends, err error) {
-	var (
-		self *openwechat.Self
-	)
-	if self, err = w.GetCurrentUser(uid); err != nil {
-		return
-	}
-	return self.Friends()
+	bot := w.Bot(uid)
+	return bot.Self.Friends()
 }
 
 func (w *Wechat) Groups(uid int64) (groups openwechat.Groups, err error) {
-	var (
-		self *openwechat.Self
-	)
-	if self, err = w.GetCurrentUser(uid); err != nil {
-		return
-	}
-	return self.Groups()
+	bot := w.Bot(uid)
+	return bot.Self.Groups()
 }
