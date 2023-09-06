@@ -9,18 +9,21 @@ type (
 		Description string `json:"description"` // 描述
 		Uid         int64  `json:"uid"`         // 用户id
 	}
-	ReplyBot struct {
-		BaseModel
+	FriendsGroups struct {
 		IsAllFriends   bool   `json:"is_all_friends"`  // 是否所有好友触发
 		Friends        string `json:"friends"`         // 好友id , 分割
 		ExcludeFriends string `json:"exclude_friends"` // 排除的好友id , 分割
 		IsAllGroups    bool   `json:"is_all_groups"`   // 是否全部组群
 		ExcludeGroups  string `json:"exclude_groups"`  // 排除掉的群聊(优先级高于选中的群聊)
 		Groups         string `json:"groups"`          // 选中的群聊
-		Name           string `json:"name"`
-		Description    string `json:"description"`
-		Rules          []Rule `json:"rules"   gorm:"many2many:reply_bot_rule;"`
-		Uid            int64  `json:"uid"`
+	}
+	ReplyBot struct {
+		BaseModel
+		FriendsGroups
+		Name        string `json:"name"`
+		Description string `json:"description"`
+		Rules       []Rule `json:"rules"   gorm:"many2many:reply_bot_rule;"`
+		Uid         int64  `json:"uid"`
 	}
 	ReplyBotRule struct {
 		ReplyBotId int64 `json:"reply_bot_id"`
@@ -38,5 +41,17 @@ type (
 		BaseModel
 		Uri      string `json:"uri"`       // 文件地址
 		FileType string `json:"file_type"` // 文件类型 图片 录音 视频
+	}
+	// TimerBot 定时机器人
+	TimerBot struct {
+		BaseModel
+		FriendsGroups
+		Uid         int64  `json:"uid"`
+		Name        string `json:"name"`        // 机器人名称
+		Description string `json:"description"` // 机器人描述
+		Msg         string `json:"msg"`         // 发送内容
+		Spec        string `json:"spec"`        // 定时规则
+		Times       int    `json:"times"`       // <=0 为无限次 >0 为有限次数
+
 	}
 )

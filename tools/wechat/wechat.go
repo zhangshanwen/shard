@@ -10,10 +10,6 @@ import (
 	"github.com/zhangshanwen/shard/common"
 )
 
-/*
-实现个自动回复，或者机器人之类的功能，可自动识别关键字,进行返回
-*/
-
 type (
 	Wechat struct {
 		bots map[int64]*Bot

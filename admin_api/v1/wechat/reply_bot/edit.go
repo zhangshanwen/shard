@@ -1,6 +1,8 @@
 package reply_bot
 
 import (
+	"strings"
+
 	"github.com/jinzhu/copier"
 
 	"github.com/zhangshanwen/shard/initialize/service"
@@ -20,7 +22,7 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	var (
-		m  = model.Rule{}
+		m  = model.ReplyBot{}
 		tx = c.Tx
 	)
 	defer func() {
@@ -37,6 +39,8 @@ func Edit(c *service.AdminTxContext) (r service.Res) {
 		return
 	}
 	var rules []model.Rule
+	m.Friends = strings.Join(p.Friends, ",")
+	m.Groups = strings.Join(p.Groups, ",")
 	for _, routeId := range p.RuleIds {
 		rules = append(rules, model.Rule{
 			BaseModel: model.BaseModel{Id: routeId},
