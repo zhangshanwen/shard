@@ -11,13 +11,8 @@ import (
 
 type (
 	Reply struct {
-		IsAllFriends   bool              // 是否全部朋友
-		ExcludeFriends []string          // 排除掉的朋友(优先级高于选中的朋友)
-		Friends        []string          // 选中的朋友
-		IsAllGroups    bool              // 是否全部组群
-		ExcludeGroups  []string          // 排除掉的群聊(优先级高于选中的群聊)
-		Groups         []string          // 选中的群聊
-		Rules          map[string]string // 适配正则
+		FriendsGroups
+		Rules map[string]string // 适配正则
 	}
 	template struct {
 		Description string

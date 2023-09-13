@@ -40,6 +40,7 @@ func (w *Wechat) Bot(uid int64) (weBot *Bot) {
 		w.bots[uid] = &Bot{
 			bot,
 			[]*Reply{},
+			[]*TimerReply{},
 			nil,
 			make(chan string),
 		}
@@ -48,7 +49,7 @@ func (w *Wechat) Bot(uid int64) (weBot *Bot) {
 	return w.bots[uid]
 }
 
-func (w *Wechat) Qrcode(uid int64, replies []*Reply) (code string, err error) {
+func (w *Wechat) Qrcode(uid int64, replies []*Reply, timerRelies []*TimerReply) (code string, err error) {
 	bot := w.Bot(uid)
 	var getCallback = make(chan bool)
 	bot.UUIDCallback = func(uuid string) {
@@ -65,7 +66,10 @@ func (w *Wechat) Qrcode(uid int64, replies []*Reply) (code string, err error) {
 			return
 		}
 		if err = bot.AddReply(replies); err != nil {
-			logrus.Warning("添加规则失败", err)
+			logrus.Warning("添加自动回复规则失败", err)
+		}
+		if err = bot.AddTimerReply(timerRelies); err != nil {
+			logrus.Warning("添加定时发送消息规则失败", err)
 		}
 		bot.SendMessage(messageLoginType, "success")
 		logrus.Info("登陆完成.......")

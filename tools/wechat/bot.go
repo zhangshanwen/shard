@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/eatmoreapple/openwechat"
+	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 
 	"github.com/zhangshanwen/shard/common"
@@ -18,9 +19,10 @@ import (
 type (
 	Bot struct {
 		*openwechat.Bot
-		replies  []*Reply
-		Self     *openwechat.Self
-		Messages chan string
+		replies     []*Reply
+		timeReplies []*TimerReply
+		Self        *openwechat.Self
+		Messages    chan string
 	}
 	messageType string
 )
@@ -47,7 +49,7 @@ func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
 	b.saveMessage(msg.Content, sender.ID(), b.Self.ID(), msg.CreateTime)
 	b.SendMessage(messageMessageType, sender.ID(), common.MessageSplitSymbol, msg.Content)
 	for k, v := range reply.Rules {
-		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply) {
+		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply.FriendsGroups) {
 			if _, err = msg.ReplyText(v); err != nil {
 				return
 			}
@@ -59,6 +61,7 @@ func (b *Bot) replyMessage(msg *openwechat.Message, reply *Reply) (err error) {
 	return
 }
 
+// AddReply 添加自动回复规则
 func (b *Bot) AddReply(replies []*Reply) (err error) {
 
 	b.replies = replies
@@ -73,11 +76,38 @@ func (b *Bot) AddReply(replies []*Reply) (err error) {
 	}
 	return
 }
-func (b *Bot) checkReply(sender *openwechat.User, reply *Reply) bool {
+
+// AddTimerReply 添加定时发送消息
+func (b *Bot) AddTimerReply(timerReplies []*TimerReply) (err error) {
+	b.timeReplies = timerReplies
+	c := tools.NewCron()
+	var (
+		entryID cron.EntryID
+	)
+	for _, i := range timerReplies {
+		if i.EntryId > 0 {
+			if tools.FindInArray[cron.Entry, int](c.Entries(), i.EntryId, func(item cron.Entry, compare int) bool {
+				return int(item.ID) == compare
+			}) {
+				continue
+			}
+		}
+		if entryID, err = c.AddFunc(i.Spec, func() {
+			b.sendFriendsGroupsMessages(i.FriendsGroups, i.Msg)
+		}); err != nil {
+			logrus.Warningf("添加定时任务失败")
+			continue
+		}
+		i.EntryId = int(entryID)
+	}
+	return
+}
+
+func (b *Bot) checkReply(sender *openwechat.User, fg FriendsGroups) bool {
 	if sender.IsFriend() {
-		return reply.IsAllFriends || b.checkFriendOrGroups(reply.Friends, reply.ExcludeFriends, sender.UserName)
+		return fg.IsAllFriends || b.checkFriendOrGroups(fg.Friends, fg.ExcludeFriends, sender.UserName)
 	} else if sender.IsGroup() {
-		return reply.IsAllGroups || b.checkFriendOrGroups(reply.Groups, reply.ExcludeGroups, sender.UserName)
+		return fg.IsAllGroups || b.checkFriendOrGroups(fg.Groups, fg.ExcludeGroups, sender.UserName)
 	}
 	return false
 }
@@ -204,4 +234,30 @@ func (b *Bot) Chat(body []string) {
 		return
 	}
 	b.saveMessage(msg, friendId, b.Self.ID(), createdTime)
+}
+
+func (b *Bot) sendFriendsGroupsMessages(fg FriendsGroups, msg string) {
+	var (
+		friends openwechat.Friends
+		groups  openwechat.Groups
+		err     error
+	)
+	if friends, err = b.Self.Friends(); err == nil {
+		for _, friend := range friends {
+			if b.checkReply(friend.User, fg) {
+				if _, err = friend.SendText(msg); err != nil {
+					logrus.Warningf("好友消息发送失败:%s-%s", friend.ID(), msg)
+				}
+			}
+		}
+	}
+	if groups, err = b.Self.Groups(); err == nil {
+		for _, group := range groups {
+			if b.checkReply(group.User, fg) {
+				if _, err = group.SendText(msg); err != nil {
+					logrus.Warningf("群组消息发送失败:%s-%s", group.ID(), msg)
+				}
+			}
+		}
+	}
 }

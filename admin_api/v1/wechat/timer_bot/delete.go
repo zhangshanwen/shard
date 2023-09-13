@@ -1,4 +1,4 @@
-package reply_bot
+package timer_bot
 
 import (
 	"github.com/zhangshanwen/shard/initialize/service"

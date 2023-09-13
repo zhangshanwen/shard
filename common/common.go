@@ -85,5 +85,7 @@ const (
 	Status      = "status"
 	Rules       = "rules"
 	Bots        = "bots"
+	Timer       = "timer"
+	Reply       = "reply"
 	Functions   = "functions"
 )

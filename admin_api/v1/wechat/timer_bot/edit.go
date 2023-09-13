@@ -1,4 +1,4 @@
-package reply_bot
+package timer_bot
 
 import (
 	"strings"

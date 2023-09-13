@@ -6,6 +6,7 @@ import (
 	"github.com/zhangshanwen/shard/admin_api/v1/wechat"
 	"github.com/zhangshanwen/shard/admin_api/v1/wechat/reply_bot"
 	"github.com/zhangshanwen/shard/admin_api/v1/wechat/rules"
+	"github.com/zhangshanwen/shard/admin_api/v1/wechat/timer_bot"
 	"github.com/zhangshanwen/shard/common"
 )
 
@@ -38,15 +39,24 @@ func InitWechat(Router *gin.RouterGroup) {
 			rule.DELETE(common.UriId, jwtTx(rules.Delete))   // 删除规则
 		}
 
-		// 回复机器人
 		bot := r.Group(common.Bots)
 		{
-			bot.GET(common.UriEmpty, jwtTx(reply_bot.Bots))    // 获取机器人列表
-			bot.POST(common.UriEmpty, jwtTx(reply_bot.Create)) // 创建机器人
-			bot.PUT(common.UriId, jwtTx(reply_bot.Edit))       // 修改机器人
-			bot.DELETE(common.UriId, jwtTx(reply_bot.Delete))  // 删除机器人
+			// 自动回复机器人
+			replyBot := bot.Group(common.Reply)
+			{
+				replyBot.GET(common.UriEmpty, jwtTx(reply_bot.Bots))    // 获取机器人列表
+				replyBot.POST(common.UriEmpty, jwtTx(reply_bot.Create)) // 创建机器人
+				replyBot.PUT(common.UriId, jwtTx(reply_bot.Edit))       // 修改机器人
+				replyBot.DELETE(common.UriId, jwtTx(reply_bot.Delete))  // 删除机器人
+			}
+			// 定时发送消息机器人
+			timerBot := bot.Group(common.Timer)
+			{
+				timerBot.GET(common.UriEmpty, jwtTx(timer_bot.Bots))    // 获取机器人列表
+				timerBot.POST(common.UriEmpty, jwtTx(timer_bot.Create)) // 创建机器人
+				timerBot.PUT(common.UriId, jwtTx(timer_bot.Edit))       // 修改机器人
+				timerBot.DELETE(common.UriId, jwtTx(timer_bot.Delete))  // 删除机器人
+			}
 		}
-
 	}
-
 }
