@@ -31,8 +31,11 @@ type (
 	}
 	ChatMessage struct {
 		BaseModel
+		OwnerId    string `json:"owner_id"`    // 拥有者id
 		SenderId   string `json:"sender_id"`   // 发送者id
 		ReceiverId string `json:"receiver_id"` // 接收者id
+		IsGroup    bool   `json:"is_group"`    // 是否为群组
+		IsSuccess  bool   `json:"is_success"`  // 是否成功
 		Msg        string `json:"msg"`         // 消息
 		MsgType    int    `json:"msg_type"`    // 消息类型  文本 表情 图片 录音 视频
 		FileId     int64  `json:"file_id"`     // 文件id

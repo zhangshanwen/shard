@@ -50,7 +50,9 @@ func Socket(c *service.AdminWechatContext) {
 			logrus.Errorf("读取消息失败:%v", err)
 			break
 		}
-		c.Bot.ReceiveMessage(message)
+		if err = c.Bot.ReceiveMessage(message); err != nil {
+			logrus.Warningf("处理消息失败:%v", err)
+		}
 	}
 	return
 }

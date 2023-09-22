@@ -34,28 +34,32 @@ func QrCode(c *service.AdminTxContext) (r service.Res) {
 			rules[rule.Key] = rule.Reply
 		}
 		replies = append(replies, &wechat.Reply{
-			IsAllFriends:   i.IsAllFriends,
-			ExcludeFriends: strings.Split(i.ExcludeFriends, ","),
-			Friends:        strings.Split(i.Friends, ","),
-			IsAllGroups:    i.IsAllGroups,
-			ExcludeGroups:  strings.Split(i.ExcludeGroups, ","),
-			Groups:         strings.Split(i.Groups, ","),
-			Rules:          rules,
+			FriendsGroups: wechat.FriendsGroups{
+				IsAllFriends:   i.IsAllFriends,
+				ExcludeFriends: strings.Split(i.ExcludeFriends, ","),
+				Friends:        strings.Split(i.Friends, ","),
+				IsAllGroups:    i.IsAllGroups,
+				ExcludeGroups:  strings.Split(i.ExcludeGroups, ","),
+				Groups:         strings.Split(i.Groups, ","),
+			},
+			Rules: rules,
 		})
 
 	}
 	tx.Where("uid=?", c.Admin.Id).Find(&timerBots)
 	for _, i := range timerBots {
 		timerReplies = append(timerReplies, &wechat.TimerReply{
-			IsAllFriends:   i.IsAllFriends,
-			ExcludeFriends: strings.Split(i.ExcludeFriends, ","),
-			Friends:        strings.Split(i.Friends, ","),
-			IsAllGroups:    i.IsAllGroups,
-			ExcludeGroups:  strings.Split(i.ExcludeGroups, ","),
-			Groups:         strings.Split(i.Groups, ","),
-			Msg:            i.Msg,
-			Spec:           i.Spec,
-			Times:          i.Times,
+			FriendsGroups: wechat.FriendsGroups{
+				IsAllFriends:   i.IsAllFriends,
+				ExcludeFriends: strings.Split(i.ExcludeFriends, ","),
+				Friends:        strings.Split(i.Friends, ","),
+				IsAllGroups:    i.IsAllGroups,
+				ExcludeGroups:  strings.Split(i.ExcludeGroups, ","),
+				Groups:         strings.Split(i.Groups, ","),
+			},
+			Msg:   i.Msg,
+			Spec:  i.Spec,
+			Times: i.Times,
 		})
 
 	}

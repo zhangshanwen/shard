@@ -16,7 +16,6 @@ func InitWechat(Router *gin.RouterGroup) {
 	{
 		r.GET(common.UriEmpty, wh(wechat.Info))    // 获取自身信息
 		r.GET(common.Status, wh(wechat.Status))    // 获取机器人状态
-		r.GET(common.Friends, wh(wechat.Friends))  // 获取好友列表
 		r.DELETE(common.Logout, wh(wechat.Logout)) // 登出
 
 		g := r.Group(common.UriLogin)
