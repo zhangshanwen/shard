@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/eatmoreapple/openwechat"
+	"github.com/jinzhu/copier"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 
@@ -39,6 +40,7 @@ const (
 	messageLoginType             messageType = "login"
 	messageMessageType           messageType = "message"
 	messageMessageReplyType      messageType = "messageReply"
+	selfInfoType                 messageType = "selfInfo"
 )
 
 func (b *Bot) replyMessage(msg *openwechat.Message, sender *openwechat.User, reply *Reply) {
@@ -237,48 +239,15 @@ func (b *Bot) ReceiveMessage(message []byte) (err error) {
 	case messagePingType:
 		b.SendMessage(messagePingType, "pong")
 	case messageSyncFriendsType:
-		var friends openwechat.Friends
-		if friends, err = b.Friends(); err != nil {
-			return
-		}
-		err = b.sendJsonMessages(messageSyncFriendsType, friends)
+		return b.syncFriends()
 	case messageSyncGroupsType:
-		var groups openwechat.Groups
-		if groups, err = b.Groups(); err != nil {
-			return
-		}
-		err = b.sendJsonMessages(messageSyncGroupsType, groups)
+		return b.syncGroups()
 	case messageSyncMessagesTotalType:
-		// 同步消息时,预先记录下记录条数,防止同步消息时,同步异常
-		var count int64
-		if err = db.G.Model(model.ChatMessage{}).Where(model.ChatMessage{OwnerId: b.Self.ID()}).Count(&count).Error; err != nil {
-			return
-		}
-		// 暂定时间为10分钟
-		db.R.SetEX(b.Context(), b.getSyncMessageTotalKey(), count, time.Minute*10)
-		b.SendMessage(messageSyncMessagesTotalType, strconv.FormatInt(count, 10))
+		return b.syncMessageTotal()
 	case messageSyncMessagesType:
-		var (
-			count int64
-			page  int
-			cm    []model.ChatMessage
-		)
-		if count, err = db.R.Get(b.Context(), b.getSyncMessageTotalKey()).Int64(); err != nil {
-			return
-		}
-		defer db.R.Del(b.Context(), b.getSyncMessageTotalKey())
-		// 给客户端发送消息时,限制消息条数为100条每次
-		for {
-			if int64(page)*100 > count {
-				break
-			}
-			if err = db.G.Where(model.ChatMessage{OwnerId: b.Self.ID()}).Offset(page * 100).Limit(100).Find(&cm).Error; err != nil {
-				return
-			}
-			if err = b.sendJsonMessages(messageMessageType, cm); err != nil {
-				return
-			}
-		}
+		return b.syncMessage()
+	case selfInfoType:
+		return b.syncInfo()
 	default:
 		b.Chat(messages[1:])
 	}
@@ -382,4 +351,67 @@ func (b *Bot) dealMessage(sendId, receiveId, msg string, isGroup, isClient bool,
 		b.SendMessage(msgReplyType, sendId, receiveId, msg)
 	}
 	return
+}
+
+func (b *Bot) syncFriends() (err error) {
+	var friends openwechat.Friends
+	if friends, err = b.Friends(); err != nil {
+		return
+	}
+	return b.sendJsonMessages(messageSyncFriendsType, friends)
+}
+func (b *Bot) syncGroups() (err error) {
+	var groups openwechat.Groups
+	if groups, err = b.Groups(); err != nil {
+		return
+	}
+	return b.sendJsonMessages(messageSyncGroupsType, groups)
+}
+func (b *Bot) syncMessageTotal() (err error) {
+	// 同步消息时,预先记录下记录条数,防止同步消息时,同步异常
+	var (
+		count int64
+	)
+	if err = db.G.Model(model.ChatMessage{}).Where(model.ChatMessage{OwnerId: b.Self.ID()}).Count(&count).Error; err != nil {
+		return
+	}
+	// 暂定时间为10分钟
+	if err = db.R.SetEX(b.Context(), b.getSyncMessageTotalKey(), count, time.Minute*10).Err(); err != nil {
+		return
+	}
+	b.SendMessage(messageSyncMessagesTotalType, strconv.FormatInt(count, 10))
+	return
+}
+
+func (b *Bot) syncMessage() (err error) {
+	var (
+		count int64
+		page  int
+		cm    []model.ChatMessage
+	)
+	if count, err = db.R.Get(b.Context(), b.getSyncMessageTotalKey()).Int64(); err != nil {
+		return
+	}
+	defer db.R.Del(b.Context(), b.getSyncMessageTotalKey())
+	// 给客户端发送消息时,限制消息条数为100条每次
+	for {
+		if int64(page)*100 > count {
+			break
+		}
+		if err = db.G.Where(model.ChatMessage{OwnerId: b.Self.ID()}).Offset(page * 100).Limit(100).Find(&cm).Error; err != nil {
+			return
+		}
+		if err = b.sendJsonMessages(messageMessageType, cm); err != nil {
+			return
+		}
+	}
+	logrus.Infof("用户(%v:%v):消息%v条同步完成!", b.Self.UserName, b.Self.ID(), count)
+	return
+}
+
+func (b *Bot) syncInfo() (err error) {
+	var (
+		ui UserInfo
+	)
+	return copier.Copy(&ui, b.Self)
 }
