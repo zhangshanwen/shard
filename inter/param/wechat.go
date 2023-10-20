@@ -39,4 +39,8 @@ type (
 		Times       int    `json:"times"`                             // 次数
 		Description string `json:"description"`                       // 描述
 	}
+	Avatar struct {
+		FindId  string `json:"find_id"`
+		IsGroup bool   `json:"is_group"`
+	}
 )

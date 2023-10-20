@@ -1,10 +1,11 @@
 package wechat
 
 import (
+	"net/http"
+
 	"github.com/gorilla/websocket"
 	"github.com/sirupsen/logrus"
 	"github.com/zhangshanwen/shard/initialize/service"
-	"net/http"
 )
 
 // Socket 创建与前端页面的连接
@@ -32,14 +33,14 @@ func Socket(c *service.AdminWechatContext) {
 			select {
 			case <-c.Done():
 				logrus.Info("websocket断开连接")
-				break
+				return
 			case <-c.Bot.Context().Done():
 				logrus.Info("机器人断开连接")
-				break
+				return
 			case m := <-c.Bot.Messages:
 				if err = conn.WriteMessage(websocket.TextMessage, []byte(m)); err != nil {
 					logrus.Errorf("%v写入消息失败:", err)
-					break
+					return
 				}
 
 			}
@@ -54,5 +55,5 @@ func Socket(c *service.AdminWechatContext) {
 			logrus.Warningf("处理消息失败:%v", err)
 		}
 	}
-	return
+
 }
