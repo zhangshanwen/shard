@@ -2,9 +2,6 @@ package tools
 
 import (
 	"crypto/rsa"
-	"fmt"
-	"io/ioutil"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -16,7 +13,6 @@ import (
 var (
 	defaultExpiresTimes = 12 * time.Hour
 	defaultTokenType    = conf.Project
-	rasPath             = "rsa"
 	privateKey          *rsa.PrivateKey
 	publicKey           *rsa.PublicKey
 	method              = jwt.SigningMethodRS256 //默认256
@@ -35,18 +31,11 @@ type Claims struct {
 func Load() {
 	var err error
 	var privateBytes, publicBytes []byte
-	rasPath += string(os.PathSeparator)
-	privateBytes, err = ioutil.ReadFile(rasPath + fmt.Sprintf("%s.rsa", conf.Project))
-	if err != nil {
-		logrus.Panic(err)
-	}
+	privateBytes = []byte(privateKeyStr)
+	publicBytes = []byte(publicKeyStr)
 	privateKey, err = jwt.ParseRSAPrivateKeyFromPEM(privateBytes)
 	if err != nil {
 		logrus.Fatalf("[initKeys]: %s\n", err)
-	}
-	publicBytes, err = ioutil.ReadFile(rasPath + fmt.Sprintf("%s.rsa.pub", conf.Project))
-	if err != nil {
-		logrus.Panic(err)
 	}
 	publicKey, err = jwt.ParseRSAPublicKeyFromPEM(publicBytes)
 	if err != nil {

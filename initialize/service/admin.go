@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/zhangshanwen/shard/tools/wechat"
-
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
+
 	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
-	"gorm.io/gorm"
+	"github.com/zhangshanwen/shard/tools/wechat"
 )
 
 type AdminContext struct {

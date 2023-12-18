@@ -6,3 +6,5 @@ files
 go.sum
 flv
 storage/
+
+*.toml

@@ -2,6 +2,7 @@ package wechat
 
 import (
 	"fmt"
+	"os"
 	"sync"
 
 	"github.com/eatmoreapple/openwechat"
@@ -42,7 +43,7 @@ func (w *Wechat) Bot(uid int64) (weBot *Bot) {
 			[]*Reply{},
 			[]*TimerReply{},
 			nil,
-			make(chan string),
+			make(chan []byte),
 		}
 	}
 
@@ -56,12 +57,19 @@ func (w *Wechat) Qrcode(uid int64, replies []*Reply, timerRelies []*TimerReply) 
 		logrus.Info("进入UUIDCallback")
 		defer func() { getCallback <- true }()
 		code = openwechat.GetQrcodeUrl(uuid)
-		bot.SendMessage(messageLoginType, "qrcode")
 	}
 	go func() {
-		reloadStorage := openwechat.NewFileHotReloadStorage(fmt.Sprintf("%v/%v.json", common.WechatStorageFileName, uid))
+		// 判断文件夹是否存在
+		if _, err = os.Stat(common.WechatStorageFilePath); err != nil {
+			_ = os.Mkdir(common.WechatStorageFilePath, os.ModePerm)
+		}
+		reloadStorage := openwechat.NewFileHotReloadStorage(fmt.Sprintf("%v/%v.json", common.WechatStorageFilePath, uid))
 		defer reloadStorage.Close()
 		if err = bot.HotLogin(reloadStorage, openwechat.NewRetryLoginOption()); err != nil {
+			logrus.Errorf("登录失败....%v", err)
+			return
+		}
+		if bot.Self, err = bot.GetCurrentUser(); err != nil {
 			logrus.Errorf("登录失败....%v", err)
 			return
 		}
@@ -71,29 +79,10 @@ func (w *Wechat) Qrcode(uid int64, replies []*Reply, timerRelies []*TimerReply) 
 		if err = bot.AddTimerReply(timerRelies); err != nil {
 			logrus.Warning("添加定时发送消息规则失败", err)
 		}
-		bot.SendMessage(messageLoginType, "success")
+		bot.SendMessage(WsBody{MsgType: messageLoginType, Data: "success"})
 		logrus.Info("登陆完成.......")
 	}()
 	<-getCallback
-	return
-}
-
-func (w *Wechat) Login(uid int64) (err error) {
-	bot := w.Bot(uid)
-	defer func() {
-		if bot.Self, err = bot.GetCurrentUser(); err != nil {
-			return
-		}
-	}()
-	if bot.Alive() {
-		// 无需重新登陆
-		return
-	}
-	reloadStorage := openwechat.NewFileHotReloadStorage(common.WechatStorageFileName)
-	defer reloadStorage.Close()
-	if err = bot.PushLogin(reloadStorage, openwechat.NewRetryLoginOption()); err != nil {
-		return
-	}
 	return
 }
 

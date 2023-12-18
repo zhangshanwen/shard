@@ -1,12 +1,13 @@
 package wechat
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/eatmoreapple/openwechat"
@@ -14,7 +15,6 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 
-	"github.com/zhangshanwen/shard/common"
 	"github.com/zhangshanwen/shard/initialize/db"
 	"github.com/zhangshanwen/shard/model"
 	"github.com/zhangshanwen/shard/tools"
@@ -26,21 +26,46 @@ type (
 		replies     []*Reply
 		timeReplies []*TimerReply
 		Self        *openwechat.Self
-		Messages    chan string
+		Messages    chan []byte
 	}
 	messageType string
+	WsBody      struct {
+		Data      interface{} `json:"data"`
+		MsgType   messageType `json:"msg_type"`
+		Timestamp int64       `json:"timestamp"`
+	}
+	ChatMsg struct {
+		Msg        string `json:"msg"`
+		SenderId   string `json:"sender_id"`
+		ReceiverId string `json:"receiver_id"`
+		OwnerId    string `json:"owner_id"`
+		IsGroup    bool   `json:"is_group"`
+	}
+
+	syncReqMsgBody struct {
+		FindId  string `json:"find_id"`
+		IsGroup bool   `json:"is_group"`
+		Count   int    `json:"count"`
+	}
+	syncResMsgBody struct {
+		Messages  []model.ChatMessage `json:"messages"`
+		LastCount int64               `json:"last_count"`
+	}
+	syncAvatarBody struct {
+		FindId  string `form:"find_id"`
+		IsGroup bool   `form:"is_group"`
+	}
 )
 
 const (
-	messagePingType              messageType = "ping"
-	messageSyncFriendsType       messageType = "syncFriends"
-	messageSyncGroupsType        messageType = "syncGroups"
-	messageSyncMessagesTotalType messageType = "syncMessagesTotal"
-	messageSyncMessagesType      messageType = "syncMessages"
-	messageLoginType             messageType = "login"
-	messageMessageType           messageType = "message"
-	messageMessageReplyType      messageType = "messageReply"
-	selfInfoType                 messageType = "selfInfo"
+	messagePingType         messageType = "ping"
+	messageSyncFriendsType  messageType = "syncFriends"
+	messageSyncGroupsType   messageType = "syncGroups"
+	messageSyncMessagesType messageType = "syncMessages"
+	messageLoginType        messageType = "login"
+	messageChatType         messageType = "chat"
+	selfInfoType            messageType = "selfInfo"
+	AvatarType              messageType = "avatar"
 )
 
 func (b *Bot) replyMessage(msg *openwechat.Message, sender *openwechat.User, reply *Reply) {
@@ -48,7 +73,6 @@ func (b *Bot) replyMessage(msg *openwechat.Message, sender *openwechat.User, rep
 		matched bool
 		err     error
 	)
-	_ = b.dealMessage(sender.ID(), b.Self.ID(), msg.Content, sender.IsGroup(), false, msg.CreateTime)
 	for k, replyMsg := range reply.Rules {
 		if matched, err = regexp.Match(k, []byte(msg.Content)); err != nil && matched && b.checkReply(sender, reply.FriendsGroups) {
 			_ = b.dealMessage(b.Self.ID(), sender.ID(), replyMsg, sender.IsGroup(), false, 0)
@@ -60,7 +84,7 @@ func (b *Bot) replyMessage(msg *openwechat.Message, sender *openwechat.User, rep
 func (b *Bot) AddReply(replies []*Reply) (err error) {
 	b.replies = replies
 	b.Bot.MessageHandler = func(msg *openwechat.Message) {
-		if msg.IsText() {
+		if !msg.IsText() {
 			return
 		}
 		var (
@@ -70,6 +94,10 @@ func (b *Bot) AddReply(replies []*Reply) (err error) {
 		if sender, err1 = msg.Sender(); err1 != nil {
 			return
 		}
+		if sender.IsGroup() {
+			return
+		}
+		_ = b.dealMessage(sender.ID(), b.Self.ID(), msg.Content, sender.IsGroup(), false, msg.CreateTime)
 		for _, reply := range b.replies {
 			b.replyMessage(msg, sender, reply)
 		}
@@ -179,77 +207,84 @@ func (b *Bot) LoginCallBack(body openwechat.CheckLoginResponse) {
 	}
 	switch loginCode {
 	case openwechat.LoginCodeSuccess:
-		b.SendMessage(messageLoginType, "success")
+		b.SendMessage(WsBody{
+			MsgType: messageLoginType,
+			Data:    "success",
+		})
 	case openwechat.LoginCodeScanned:
-		b.SendMessage(messageLoginType, "scanned")
+		b.SendMessage(WsBody{
+			MsgType: messageLoginType,
+			Data:    "scanned",
+		})
 	case openwechat.LoginCodeTimeout:
-		b.SendMessage(messageLoginType, "timeout")
+		b.SendMessage(WsBody{
+			MsgType: messageLoginType,
+			Data:    "timeout",
+		})
 	default:
 		return
 	}
 }
 
+func (b *Bot) ScanCallBack(body openwechat.CheckLoginResponse) {
+	logrus.Info(string(body))
+	b.SendMessage(WsBody{MsgType: messageLoginType, Data: "scanned"})
+}
+
 // 保存历史信息
-func (b *Bot) saveMessage(message, ownerId, senderId, receiverId string, createdTime int64, isGroup bool, err error) {
-	go func() {
-		cm := model.ChatMessage{
-			Msg:        message,
-			SenderId:   senderId,
-			OwnerId:    ownerId,
-			IsGroup:    isGroup,
-			IsSuccess:  err == nil,
-			ReceiverId: receiverId,
-		}
-		if createdTime != 0 {
-			cm.CreatedTime = createdTime
-		}
-		db.G.Save(&cm)
-	}()
-}
-
-// SendMessage 向客户端发送消息数据
-func (b *Bot) SendMessage(t messageType, message ...string) {
-	message = append([]string{string(t)}, message...)
-	go func() {
-		b.Messages <- strings.Join(message, common.MessageSplitSymbol)
-	}()
-}
-
-func (b *Bot) sendJsonMessages(msgType messageType, msg interface{}) (err error) {
-	var (
-		body []byte
-	)
-	if body, err = json.Marshal(&msg); err != nil {
-		return
+func (b *Bot) saveMessage(message, ownerId, senderId, receiverId string, createdTime int64, isGroup bool, err error) (cm model.ChatMessage) {
+	cm = model.ChatMessage{
+		Msg:        message,
+		SenderId:   senderId,
+		OwnerId:    ownerId,
+		IsGroup:    isGroup,
+		IsSuccess:  err == nil,
+		ReceiverId: receiverId,
 	}
-	b.SendMessage(msgType, string(body))
-	return
+	if createdTime != 0 {
+		cm.CreatedTime = createdTime
+	}
+	db.G.Save(&cm)
+	return cm
+}
+
+func (b *Bot) SendMessage(wb WsBody) {
+
+	go func() {
+		if wb.Data == nil {
+			wb.Data = map[string]string{}
+		}
+		wb.Timestamp = time.Now().Unix()
+		msgBytes, _ := json.Marshal(&wb)
+		b.Messages <- msgBytes
+	}()
 }
 
 func (b *Bot) ReceiveMessage(message []byte) (err error) {
 	if len(message) <= 0 {
 		return
 	}
-	var messages = strings.Split(string(message), common.MessageSplitSymbol)
-	if len(messages) <= 1 {
-		// 符合规范消息ping[::]ping
+	var wb WsBody
+	if err = json.Unmarshal(message, &wb); err != nil {
 		return
 	}
-	switch messageType(messages[0]) {
+
+	switch wb.MsgType {
 	case messagePingType:
-		b.SendMessage(messagePingType, "pong")
+		b.SendMessage(WsBody{
+			MsgType: messagePingType,
+			Data:    "pong",
+		})
 	case messageSyncFriendsType:
 		return b.syncFriends()
 	case messageSyncGroupsType:
 		return b.syncGroups()
-	case messageSyncMessagesTotalType:
-		return b.syncMessageTotal()
 	case messageSyncMessagesType:
-		return b.syncMessage()
+		return b.syncMessage(wb)
 	case selfInfoType:
 		return b.syncInfo()
 	default:
-		b.Chat(messages[1:])
+		b.Chat(wb)
 	}
 	return
 }
@@ -258,35 +293,21 @@ func (b *Bot) getSyncMessageTotalKey() string {
 }
 
 func (b *Bot) CleanMessages() {
-	b.Messages = make(chan string)
+	b.Messages = make(chan []byte)
 }
-func (b *Bot) Chat(body []string) {
-	if len(body) <= 1 {
-		//符合聊天消息   message[::]friend_id[::]is_group[::]消息时间戳[::]hello world
-		return
-	}
+func (b *Bot) Chat(wb WsBody) {
 	var (
-		friendId    = body[0]
-		issGroup    bool
-		createdTime int64
-		msg         = strings.Join(body[3:], "")
-		err         error
-		friend      *openwechat.Friend
+		err     error
+		chatMsg ChatMsg
+		body    []byte
 	)
-	if friend, err = b.FindFriend(friendId); err != nil {
-		logrus.Warning(err)
+	if body, err = json.Marshal(&wb.Data); err != nil {
 		return
 	}
-	if _, err = friend.SendText(msg); err != nil {
-		logrus.Warning(err)
-	}
-	if createdTime, err = strconv.ParseInt(body[2], 10, 64); err != nil {
+	if err = json.Unmarshal(body, &chatMsg); err != nil {
 		return
 	}
-	if strings.ToLower(body[1]) == "true" {
-		issGroup = true
-	}
-	_ = b.dealMessage(b.Self.ID(), friendId, msg, issGroup, true, createdTime)
+	_ = b.dealMessage(b.Self.ID(), chatMsg.ReceiverId, chatMsg.Msg, chatMsg.IsGroup, true, wb.Timestamp)
 }
 
 func (b *Bot) sendFriendsGroupsMessages(fg FriendsGroups, msg string) {
@@ -339,73 +360,84 @@ func (b *Bot) sendFriendGroupMsg(findId, msg string, isGroup bool) (err error) {
 }
 
 func (b *Bot) dealMessage(sendId, receiveId, msg string, isGroup, isClient bool, createdTime int64) (err error) {
-	defer b.saveMessage(msg, b.Self.ID(), sendId, receiveId, createdTime, isGroup, err)
-	var msgReplyType = messageMessageType
+	var msgReplyType = messageChatType
 	if b.Self.ID() == sendId {
-		msgReplyType = messageMessageReplyType
 		// 自身为发送者,需要给好友/群组发送消息
 		err = b.sendFriendGroupMsg(receiveId, msg, isGroup)
 	}
-	if !isClient {
-		// 如果不是客户端发送的消息，需要向客户端发送此消息
-		b.SendMessage(msgReplyType, sendId, receiveId, msg)
-	}
+	b.SendMessage(WsBody{
+		MsgType: msgReplyType,
+		Data:    b.saveMessage(msg, b.Self.ID(), sendId, receiveId, createdTime, isGroup, err),
+	})
 	return
 }
 
 func (b *Bot) syncFriends() (err error) {
-	var friends openwechat.Friends
+	var (
+		friends openwechat.Friends
+		ot      []UserInfo
+	)
 	if friends, err = b.Friends(); err != nil {
 		return
 	}
-	return b.sendJsonMessages(messageSyncFriendsType, friends)
+
+	if err = copier.Copy(&ot, &friends); err != nil {
+		return err
+	}
+
+	for i := 0; i < len(friends); i++ {
+		var friend = friends[i]
+		ot[i].Uin = friend.ID()
+		ot[i].HeadImgBase64, _ = b.getHeadImgBase64(friend.GetAvatarResponse)
+	}
+	b.SendMessage(WsBody{
+		MsgType: messageSyncFriendsType,
+		Data:    ot,
+	})
+	return
 }
 func (b *Bot) syncGroups() (err error) {
 	var groups openwechat.Groups
 	if groups, err = b.Groups(); err != nil {
 		return
 	}
-	return b.sendJsonMessages(messageSyncGroupsType, groups)
-}
-func (b *Bot) syncMessageTotal() (err error) {
-	// 同步消息时,预先记录下记录条数,防止同步消息时,同步异常
-	var (
-		count int64
-	)
-	if err = db.G.Model(model.ChatMessage{}).Where(model.ChatMessage{OwnerId: b.Self.ID()}).Count(&count).Error; err != nil {
-		return
-	}
-	// 暂定时间为10分钟
-	if err = db.R.SetEX(b.Context(), b.getSyncMessageTotalKey(), count, time.Minute*10).Err(); err != nil {
-		return
-	}
-	b.SendMessage(messageSyncMessagesTotalType, strconv.FormatInt(count, 10))
+	b.SendMessage(WsBody{
+		MsgType: messageSyncGroupsType,
+		Data:    groups,
+	})
 	return
 }
 
-func (b *Bot) syncMessage() (err error) {
+func (b *Bot) syncMessage(wb WsBody) (err error) {
 	var (
-		count int64
-		page  int
-		cm    []model.ChatMessage
+		syb   syncReqMsgBody
+		res   syncResMsgBody
+		limit = 5
+		body  []byte
 	)
-	if count, err = db.R.Get(b.Context(), b.getSyncMessageTotalKey()).Int64(); err != nil {
+	if body, err = json.Marshal(&wb.Data); err != nil {
 		return
 	}
-	defer db.R.Del(b.Context(), b.getSyncMessageTotalKey())
-	// 给客户端发送消息时,限制消息条数为100条每次
-	for {
-		if int64(page)*100 > count {
-			break
-		}
-		if err = db.G.Where(model.ChatMessage{OwnerId: b.Self.ID()}).Offset(page * 100).Limit(100).Find(&cm).Error; err != nil {
-			return
-		}
-		if err = b.sendJsonMessages(messageMessageType, cm); err != nil {
-			return
-		}
+	if err = json.Unmarshal(body, &syb); err != nil {
+		return
 	}
-	logrus.Infof("用户(%v:%v):消息%v条同步完成!", b.Self.UserName, b.Self.ID(), count)
+	// 默认同步最近5条
+	tx := db.G.Model(model.ChatMessage{}).Where("owner_id = ? and is_group = ? and  (sender_id = ? or receiver_id = ? )",
+		b.Self.ID(), syb.IsGroup, syb.FindId, syb.FindId)
+	if err = tx.Order(" created_time desc ").Offset(syb.Count).Limit(limit).Find(&res.Messages).Error; err != nil {
+		return
+	}
+	res.Messages = tools.Reverse[model.ChatMessage](res.Messages)
+
+	if err = tx.Count(&res.LastCount).Error; err != nil {
+		return err
+	}
+	res.LastCount -= int64(syb.Count + limit)
+	b.SendMessage(WsBody{
+		MsgType: messageSyncMessagesType,
+		Data:    res,
+	})
+	logrus.Infof("用户(%v:%v):消息%v条同步完成!,剩余%v条消息", b.Self.NickName, b.Self.ID(), len(res.Messages), res.LastCount)
 	return
 }
 
@@ -413,5 +445,68 @@ func (b *Bot) syncInfo() (err error) {
 	var (
 		ui UserInfo
 	)
-	return copier.Copy(&ui, b.Self)
+	if err = copier.Copy(&ui, b.Self); err != nil {
+		return
+	}
+	ui.Uin = b.Self.ID()
+	if ui.HeadImgBase64, err = b.getHeadImgBase64(b.Self.GetAvatarResponse); err != nil {
+		return
+	}
+	b.SendMessage(WsBody{
+		MsgType: selfInfoType,
+		Data:    ui,
+	})
+	return
+}
+
+func (b *Bot) getHeadImgBase64(f func() (*http.Response, error)) (bs string, err error) {
+	var (
+		resp *http.Response
+		body []byte
+	)
+	if resp, err = f(); err != nil {
+		return
+	}
+	defer resp.Body.Close()
+	if body, err = io.ReadAll(resp.Body); err != nil {
+		return
+	}
+	bs = base64.StdEncoding.EncodeToString(body)
+	return
+}
+
+func (b *Bot) syncAvatar(wb WsBody) (err error) {
+	var (
+		p    syncAvatarBody
+		bs   string
+		body []byte
+	)
+	if body, err = json.Marshal(&wb.Data); err != nil {
+		return
+	}
+	if err = json.Unmarshal(body, &p); err != nil {
+		return
+	}
+	if p.FindId == b.Self.ID() {
+		bs, err = b.getHeadImgBase64(b.Self.GetAvatarResponse)
+	} else if p.IsGroup {
+		var group *openwechat.Group
+		if group, err = b.FindGroup(p.FindId); err != nil {
+			return
+		}
+		bs, err = b.getHeadImgBase64(group.GetAvatarResponse)
+
+	} else {
+		var friend *openwechat.Friend
+		if friend, err = b.FindFriend(p.FindId); err != nil {
+			return
+		}
+		bs, err = b.getHeadImgBase64(friend.GetAvatarResponse)
+
+	}
+	b.SendMessage(WsBody{
+		MsgType: AvatarType,
+		Data:    bs,
+	})
+	return
 }

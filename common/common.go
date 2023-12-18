@@ -45,7 +45,7 @@ const (
 
 	Socket = "socket"
 
-	WechatStorageFileName = "storage"
+	WechatStorageFilePath = "storage"
 
 	// router
 	UriEmpty    = ""
@@ -83,6 +83,7 @@ const (
 	Qrcode      = "qrcode"
 	Friends     = "friends"
 	Status      = "status"
+	Avatar      = "avatar"
 	Rules       = "rules"
 	Bots        = "bots"
 	Timer       = "timer"

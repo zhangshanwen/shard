@@ -40,7 +40,7 @@ type (
 		Description string `json:"description"`                       // 描述
 	}
 	Avatar struct {
-		FindId  string `json:"find_id"`
-		IsGroup bool   `json:"is_group"`
+		FindId  string `form:"find_id"           binding:"required"`
+		IsGroup bool   `form:"is_group"`
 	}
 )

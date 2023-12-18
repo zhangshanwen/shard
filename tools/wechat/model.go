@@ -18,7 +18,7 @@ type (
 		OwnerUin          int    `json:"owner_uin"`
 		Statues           int    `json:"statues"`
 		AttrStatus        int64  `json:"attr_status"`
-		Uin               int64  `json:"uin"`
+		Uin               string `json:"uin"`
 		Province          string `json:"province"`
 		City              string `json:"city"`
 		Alias             string `json:"alias"`
@@ -34,5 +34,6 @@ type (
 		RemarkPYInitial   string `json:"remark_py_initial"`
 		RemarkPYQuanPin   string `json:"remark_py_quan_pin"`
 		Signature         string `json:"signature"`
+		HeadImgBase64     string `json:"head_img_base64"`
 	}
 )

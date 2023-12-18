@@ -38,7 +38,7 @@ func Socket(c *service.AdminWechatContext) {
 				logrus.Info("机器人断开连接")
 				return
 			case m := <-c.Bot.Messages:
-				if err = conn.WriteMessage(websocket.TextMessage, []byte(m)); err != nil {
+				if err = conn.WriteMessage(websocket.TextMessage, m); err != nil {
 					logrus.Errorf("%v写入消息失败:", err)
 					return
 				}
