@@ -144,6 +144,17 @@ func (r *Res) RoomExisted() {
 	r.StatusCode = http.StatusBadRequest
 	r.Msg = common.RoomExisted
 }
+func (r *Res) RoomJoinFailed() {
+	r.ResCode = code.RoomJoinFailed
+	r.StatusCode = http.StatusBadRequest
+	r.Msg = common.RoomJoinFailed
+}
+
+func (r *Res) PushFailed() {
+	r.ResCode = code.PushFailed
+	r.StatusCode = http.StatusBadRequest
+	r.Msg = common.PushFailed
+}
 
 func (r *Res) TaskVerifyError() {
 	r.ResCode = code.TaskVerifyError

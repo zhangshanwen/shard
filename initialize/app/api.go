@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/deckarep/golang-set"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 
 	"github.com/zhangshanwen/shard/common"
@@ -21,6 +22,7 @@ var (
 func init() {
 	gin.ForceConsoleColor()
 	R = gin.Default()
+	R.Use(cors.Default())
 
 }
 

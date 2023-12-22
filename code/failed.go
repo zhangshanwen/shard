@@ -6,7 +6,6 @@ package code
 (201000,202000] -> 认证错误
 (202000,203000] -> 注册错误
 (203000,204000] -> 登录错误
-
 */
 const (
 	BaseFailedCode    = 200000 // 基数失败code
@@ -32,6 +31,8 @@ const (
 	UploadFileFailed  = 204001 // 上传文件失败
 	NotOwner          = 204002 // 不是拥有者
 	RoomExisted       = 204003 // 房间已存在
+	RoomJoinFailed    = 204004 // 房间加入失败
+	PushFailed        = 204005 // 房间加入失败
 	TaskVerifyError   = 205001 // 任务校验失败
 	TaskAddFailed     = 205002 // 任务添加失败
 	TaskStopFailed    = 205003 // 任务停止失败

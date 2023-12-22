@@ -33,6 +33,7 @@ func Flv(c *gin.Context) {
 
 	// 判断视屏流是否发布,如果没有发布,直接返回404
 	messages := flv.GetStreams(app.S)
+	logrus.Info(messages)
 	path := strings.Replace(p.Id, ".flv", "", -1)
 	if messages == nil || len(messages.Publishers) == 0 {
 		c.String(http.StatusNotFound, "invalid path")

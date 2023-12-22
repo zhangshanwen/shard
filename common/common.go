@@ -22,7 +22,8 @@ const (
 	MessageSplitSymbol = "[::]"
 
 	//
-	TimeFullFormat = "2006-01-02 15:04:05"
+	TimeFullFormat  = "2006-01-02 15:04:05"
+	TimeCrushFormat = "20060102150405"
 
 	// redis key
 	RedisRoutesKey = "shard_routes_%v"
@@ -70,6 +71,7 @@ const (
 	File        = "file"
 	Host        = "host"
 	Live        = "live"
+	Meeting     = "meeting"
 	Barrage     = "barrage"
 	Log         = "log"
 	Task        = "task"
@@ -81,7 +83,9 @@ const (
 	Empty       = "empty"
 	Wechat      = "wechat"
 	Qrcode      = "qrcode"
-	Friends     = "friends"
+	Push        = "push"
+	Join        = "join"
+	Offset      = "offset"
 	Status      = "status"
 	Avatar      = "avatar"
 	Rules       = "rules"

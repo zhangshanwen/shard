@@ -76,21 +76,22 @@ func (s *Server) handleConn(conn *core.Conn) error {
 	}
 
 	_, name, _ := connServer.GetInfo()
-	log.Debugf("handleConn: IsPublisher=%v", connServer.IsPublisher())
+	log.Infof("handleConn: IsPublisher=%v,name:%v", connServer.IsPublisher(), name)
 	if connServer.IsPublisher() {
 		channel := db.R.Get(context.Background(), name).Val()
 		if channel == "" {
+			log.Error("no channel")
 			return errors.New("no channel")
 		}
 		db.R.Expire(context.Background(), name, time.Minute*10)
 		connServer.PublishInfo.Name = channel
 		reader := NewVirReader(connServer)
 		s.handler.HandleReader(reader)
-		log.Debugf("new publisher: %+v", reader.Info())
+		log.Infof("new publisher: %+v", reader.Info())
 
 		if s.getter != nil {
 			writeType := reflect.TypeOf(s.getter)
-			log.Debugf("handleConn:writeType=%v", writeType)
+			log.Infof("handleConn:writeType=%v", writeType)
 			writer := s.getter.GetWriter(reader.Info())
 			s.handler.HandleWriter(writer)
 		}
@@ -99,7 +100,7 @@ func (s *Server) handleConn(conn *core.Conn) error {
 		//s.handler.HandleWriter(flvWriter.GetWriter(reader.Info()))
 	} else {
 		writer := NewVirWriter(connServer)
-		log.Debugf("new player: %+v", writer.Info())
+		log.Infof("new player: %+v", writer.Info())
 		s.handler.HandleWriter(writer)
 	}
 
@@ -223,7 +224,6 @@ func (v *VirWriter) DropPacket(pktQue chan *av.Packet, info av.Info) {
 	log.Debug("packet queue len: ", len(pktQue))
 }
 
-//
 func (v *VirWriter) Write(p *av.Packet) (err error) {
 	err = nil
 

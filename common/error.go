@@ -19,6 +19,8 @@ var (
 	UploadFileFailed = "UploadFileFailed"
 	SystemError      = "SystemError"
 	RoomExisted      = "RoomExisted"
+	RoomJoinFailed   = "RoomJoinFailed"
+	PushFailed       = "PushFailed"
 	NotChange        = "NotChange"
 	TaskAddFailed    = "TaskAddFailed"
 	TaskStopFailed   = "TaskStopFailed"

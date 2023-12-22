@@ -149,11 +149,13 @@ func (s *Stream) AddWriter(w av.WriteCloser) {
 	s.ws.Store(info.UID, pw)
 }
 
-/*检测本application下是否配置static_push,
-如果配置, 启动push远端的连接*/
+/*
+检测本application下是否配置static_push,
+如果配置, 启动push远端的连接
+*/
 func (s *Stream) StartStaticPush() {
 	key := s.info.Key
-
+	log.Info("key=", key, "------------")
 	dscr := strings.Split(key, "/")
 	if len(dscr) < 1 {
 		return
