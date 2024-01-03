@@ -19,4 +19,7 @@ type (
 	Socket struct {
 		Id string `uri:"id" binding:"required"`
 	}
+	SocketInt struct {
+		Id int64 `uri:"id" binding:"required"`
+	}
 )

@@ -14,7 +14,7 @@ type (
 )
 
 const (
-	MeetingStatusPending = iota
-	MeetingStatusRunning
-	MeetingStatusEnd
+	MeetingStatusPending = iota // 待开始
+	MeetingStatusRunning        // 进行中
+	MeetingStatusEnd            // 结束
 )
