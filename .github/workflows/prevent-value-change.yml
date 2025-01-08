@@ -1,0 +1,20 @@
+name: Prevent PR from modifying specific values
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  check-value:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Check specific file and value
+        run: |
+          if grep -q '"devMode"' env/env.jsonnet; then
+            echo "Error: You cannot modify 'devMode' in env/env.jsonnet" && exit 1
+          fi
